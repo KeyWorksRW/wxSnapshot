@@ -2,6 +2,8 @@ This repository contains a snapshot of the **wxWidgets** (https://github.com/wxW
 
 For the official wxWidgets readme file, please see wxREADME.md.
 
+The current snapshot of **wxWidgets** is version 3.1.15.
+
 ## CMake
 
 The `CMakeLists.txt` file is _not_ the same file that is part of the wxWidgets repository. This is a custom version, designed to build two static librarys: **wxCLib** and **wxWidgets**.
