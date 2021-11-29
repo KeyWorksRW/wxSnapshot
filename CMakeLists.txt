@@ -51,6 +51,7 @@ if (MSVC)
         __WXMSW__
         WIN32
     )
+    target_compile_options(wxWidgets PRIVATE "$<$<CONFIG:Release>:/GL>")
 endif()
 
 target_compile_definitions(wxWidgets PRIVATE
