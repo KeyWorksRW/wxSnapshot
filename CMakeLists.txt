@@ -69,6 +69,9 @@ target_precompile_headers(wxWidgets PRIVATE "include/wx/wxprec.h")
 
 target_include_directories(wxWidgets PRIVATE
     include
+    if (WIN32)
+        win
+    endif()
     src/tiff/libtiff
     src/jpeg
     src/png
@@ -84,6 +87,9 @@ target_include_directories(wxWidgets PRIVATE
 
 target_include_directories(wxCLib PRIVATE
     include
+    if (WIN32)
+        win
+    endif()
     src/tiff/libtiff
     src/jpeg
     src/zlib
