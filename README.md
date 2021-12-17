@@ -14,7 +14,6 @@ The `wxWidgets.lib` library is a subset of the wxMondo library that would normal
 - wxMedia
 - wxNet
 - wxQA
-- wxXRC
 
 The other difference between these libraries and the official wxWidgets libraries is the compiler options used. Under MSW, the compiler is told to optimize for space rather than speed (which often results in faster code due to CPU caching). Debug builds are built using using /Z7 instead of /Zi -- this results in a slightly larger PDB file, but faster compilation with ninja.
 

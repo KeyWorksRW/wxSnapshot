@@ -346,7 +346,6 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/msw/uxtheme.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/volume.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/xrc/xmlreshandler.cpp
 
     # wx_aui
     ${CMAKE_CURRENT_LIST_DIR}/aui/auibar.cpp
@@ -358,8 +357,6 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/aui/tabart.cpp
     ${CMAKE_CURRENT_LIST_DIR}/aui/tabartmsw.cpp
     ${CMAKE_CURRENT_LIST_DIR}/aui/tabmdi.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_aui.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_auitoolb.cpp
 
     # wx_html
     ${CMAKE_CURRENT_LIST_DIR}/generic/htmllbox.cpp
@@ -411,7 +408,6 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/ribbon/page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ribbon/panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ribbon/toolbar.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_ribbon.cpp
 
     # wx_stc (Scintilla)
     ${CMAKE_CURRENT_LIST_DIR}/stc/PlatWX.cpp
@@ -575,11 +571,86 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/richtext/richtextstyles.cpp
     ${CMAKE_CURRENT_LIST_DIR}/richtext/richtextsymboldlg.cpp
     ${CMAKE_CURRENT_LIST_DIR}/richtext/richtextxml.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_richtext.cpp
 
     # wx_xml (required by wx_richtext)
     ${CMAKE_CURRENT_LIST_DIR}/common/xtixml.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xml/xml.cpp
+
+    # wx_xrc
+
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_aui.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_auitoolb.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_activityindicator.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_animatctrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bannerwindow.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bmp.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bmpbt.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bmpcbox.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bttn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_cald.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_chckb.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_chckl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_choic.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_choicbk.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_clrpicker.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_cmdlinkbn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_collpane.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_combo.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_comboctrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_dataview.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_datectrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_dirpicker.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_dlg.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_editlbox.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_filectrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_filepicker.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_fontpicker.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_frame.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_gauge.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_gdctl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_grid.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_html.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_htmllbox.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_hyperlink.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_infobar.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_listb.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_listbk.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_listc.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_mdi.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_menu.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_notbk.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_odcombo.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_propdlg.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_radbt.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_radbx.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_ribbon.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_richtext.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_scrol.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_scwin.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_simplebook.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_sizer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_slidr.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_spin.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_split.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_srchctrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_statbar.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_stbmp.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_stbox.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_stlin.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_sttxt.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_text.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_tglbtn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_timectrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_toolb.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_toolbk.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_tree.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_treebk.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_unkwn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_wizrd.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xmlres.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xmlreshandler.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xmlrsall.cpp
 
     # wx_webview
     ${CMAKE_CURRENT_LIST_DIR}/common/webview.cpp
