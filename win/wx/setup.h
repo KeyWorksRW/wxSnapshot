@@ -1473,9 +1473,9 @@
 //
 // Recommended setting (at present): 1 (MSW-only)
 #ifdef __WXMSW__
-#define wxUSE_ACCESSIBILITY 1
+    #define wxUSE_ACCESSIBILITY 0
 #else
-#define wxUSE_ACCESSIBILITY 0
+    #define wxUSE_ACCESSIBILITY 0
 #endif
 
 // ----------------------------------------------------------------------------
