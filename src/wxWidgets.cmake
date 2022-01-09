@@ -1,4 +1,32 @@
 
+if (WIN32)
+    set(msw_files
+        ${CMAKE_CURRENT_LIST_DIR}/msw/basemsw.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/crashrpt.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/dde.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/debughlp.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/dir.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/dlmsw.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/evtloopconsole.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/fswatcher.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/mimetype.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/power.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/regconf.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/registry.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/secretstore.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/snglinst.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/sockmsw.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/stackwalk.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/stdpaths.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/thread.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/timer.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/utils.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/utilsexc.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/msw/volume.cpp
+    )
+endif()
+
+
 set (wxWidget_sources
     # wx_core
     ${CMAKE_CURRENT_LIST_DIR}/common/accelcmn.cpp
@@ -106,6 +134,7 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/popupcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/preferencescmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/prntbase.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/protocol.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/quantize.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/radiobtncmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/radiocmn.cpp
@@ -113,10 +142,12 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/rendcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/rgncmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/richtooltipcmn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/sckaddr.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/scrolbarcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/settcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/sizer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/slidercmn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/socket.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/spinbtncmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/spinctrlcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/srchcmn.cpp
@@ -135,6 +166,7 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/treebase.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/uiactioncmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/utilscmn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/url.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/valgen.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/validate.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/valnum.cpp
@@ -577,7 +609,6 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/xml/xml.cpp
 
     # wx_xrc
-
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_aui.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_auitoolb.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_activityindicator.cpp
@@ -658,7 +689,6 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/webviewfshandler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/webview_edge.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/webview_ie.cpp
-
 
     # wxBase (these files are normally compiled into base library)
     ${CMAKE_CURRENT_LIST_DIR}/common/any.cpp
@@ -750,27 +780,8 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/zipstrm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/zstream.cpp
     ${CMAKE_CURRENT_LIST_DIR}/generic/fswatcherg.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/basemsw.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/crashrpt.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/dde.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/debughlp.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/dir.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/dlmsw.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/evtloopconsole.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/fswatcher.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/mimetype.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/power.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/regconf.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/registry.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/secretstore.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/snglinst.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/stackwalk.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/stdpaths.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/thread.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/timer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/utils.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/utilsexc.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/msw/volume.cpp
+
+    ${msw_files}
 
 )
 
