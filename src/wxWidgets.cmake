@@ -87,7 +87,6 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/fontpickercmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/fontutilcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/framecmn.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/common/fs_mem.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/gaugecmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/gbsizer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/gdicmn.cpp
@@ -722,6 +721,7 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/fmapbase.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/fs_arc.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/fs_filter.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/fs_inet.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/fs_mem.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/fswatchercmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/hash.cpp
