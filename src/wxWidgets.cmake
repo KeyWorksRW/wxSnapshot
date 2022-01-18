@@ -97,6 +97,7 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/headercolcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/headerctrlcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/helpbase.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/http.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/hyperlnkcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/iconbndl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/imagall.cpp
@@ -164,8 +165,8 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/toplvcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/treebase.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/uiactioncmn.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/common/utilscmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/url.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/utilscmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/valgen.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/validate.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/valnum.cpp
