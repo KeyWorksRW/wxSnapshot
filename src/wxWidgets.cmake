@@ -275,6 +275,8 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/rgncmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/richtooltipcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/sckaddr.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/sckfile.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/sckipc.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/sckstrm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/scrolbarcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/settcmn.cpp
