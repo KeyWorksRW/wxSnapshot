@@ -219,6 +219,7 @@ set (wxWidget_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/fontpickercmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/fontutilcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/framecmn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/ftp.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/gaugecmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/gbsizer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/gdicmn.cpp
