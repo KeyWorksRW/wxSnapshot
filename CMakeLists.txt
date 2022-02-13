@@ -48,8 +48,7 @@ if (NOT isMultiConfig)
     endif()
 endif()
 
-# include(src/wxWidgets.cmake)  # This will set ${wxWidget_sources} and ${wxCLib_sources} with list of files
-include(build/sources.cmake)  # This will set ${wxWidget_sources} and ${wxCLib_sources} with list of files
+include(src/sources.cmake)  # This will set ${wxWidget_sources} and ${wxCLib_sources} with list of files
 
 if (WIN32)
     add_library(wxWidgets STATIC ${common_sources} ${msw_sources} )
