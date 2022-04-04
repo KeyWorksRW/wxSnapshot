@@ -2,7 +2,7 @@ This repository contains a snapshot of the **wxWidgets** (https://github.com/wxW
 
 For the official wxWidgets readme file, please see wxREADME.md.
 
-The current snapshot of **wxWidgets** is version 3.1.15.
+The current snapshot of **wxWidgets** is version 3.1.6.
 
 ## CMake
 
