@@ -24,6 +24,7 @@ set (common_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/arttango.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/base64.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/bmpbase.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/bmpbndl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/bmpbtncmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/bmpcboxcmn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/bookctrl.cpp
@@ -224,6 +225,7 @@ set (common_sources
     ${CMAKE_CURRENT_LIST_DIR}/common/treebase.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/txtstrm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/uiactioncmn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/common/uilocale.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/unichar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/uri.cpp
     ${CMAKE_CURRENT_LIST_DIR}/common/url.cpp
@@ -256,6 +258,7 @@ set (common_sources
     ${CMAKE_CURRENT_LIST_DIR}/generic/animateg.cpp
     ${CMAKE_CURRENT_LIST_DIR}/generic/bannerwindow.cpp
     ${CMAKE_CURRENT_LIST_DIR}/generic/bmpcboxg.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/generic/bmpsvg.cpp
     ${CMAKE_CURRENT_LIST_DIR}/generic/busyinfo.cpp
     ${CMAKE_CURRENT_LIST_DIR}/generic/buttonbar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/generic/calctrlg.cpp
@@ -579,6 +582,7 @@ set (common_sources
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_stbox.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_stlin.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_sttxt.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_styledtextctrl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_text.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_tglbtn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_timectrl.cpp
@@ -612,6 +616,7 @@ set (msw_sources
     ${CMAKE_CURRENT_LIST_DIR}/msw/artmsw.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/basemsw.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/bitmap.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/msw/bmpbndl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/bmpbuttn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/bmpcbox.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/brush.cpp
@@ -754,6 +759,7 @@ set (msw_sources
     ${CMAKE_CURRENT_LIST_DIR}/msw/toplevel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/treectrl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/uiaction.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/msw/uilocale.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/urlmsw.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/utils.cpp
     ${CMAKE_CURRENT_LIST_DIR}/msw/utilsexc.cpp

@@ -229,6 +229,15 @@ public:
     // returns true if the platform should explicitly apply a theme border
     virtual bool CanApplyThemeBorder() const wxOVERRIDE { return false; }
 
+
+    // Implementation only from now on.
+
+    // Returns an empty bundle if no image is specified for this page.
+    wxBitmapBundle GetPageBitmapBundle(size_t n) const
+    {
+        return GetBitmapBundle(GetPageImage(n));
+    }
+
 protected:
     // flags for DoSetSelection()
     enum
@@ -339,7 +348,7 @@ protected:
     void OnSize(wxSizeEvent& event);
 
     // controller buddy if available, NULL otherwise (usually for native book controls like wxNotebook)
-    wxControl *m_bookctrl;
+    wxWindow *m_bookctrl;
 
     // Whether to shrink to fit current page
     bool m_fitToCurrentPage;
