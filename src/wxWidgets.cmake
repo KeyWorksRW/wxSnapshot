@@ -529,6 +529,7 @@ set (common_sources
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bmp.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bmpbt.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bmpcbox.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bookctrlbase.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_bttn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_cald.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xrc/xh_chckb.cpp
