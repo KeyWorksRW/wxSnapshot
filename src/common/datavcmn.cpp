@@ -549,7 +549,7 @@ unsigned int wxDataViewIndexListModel::GetRow( const wxDataViewItem &item ) cons
 
 wxDataViewItem wxDataViewIndexListModel::GetItem( unsigned int row ) const
 {
-    wxASSERT( row < m_hash.GetCount() );
+    wxCHECK_MSG( row < m_hash.GetCount(), wxDataViewItem(), wxS("invalid index") );
     return wxDataViewItem( m_hash[row] );
 }
 
@@ -861,7 +861,7 @@ wxDataViewRendererBase::CheckedGetValue(const wxDataViewModel* model,
     // We always allow the cell to be null, regardless of the renderer type.
     if ( !value.IsNull() )
     {
-        if ( value.GetType() != GetVariantType() )
+        if ( !IsCompatibleVariantType(value.GetType()) )
         {
             // If you're seeing this message, this indicates that either your
             // renderer is using the wrong type, or your model returns values

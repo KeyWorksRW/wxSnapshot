@@ -21,6 +21,9 @@ if (MSVC)
 
     string(REPLACE "/Zi" "/Z7" z_seven ${CMAKE_C_FLAGS_DEBUG})
     set(CMAKE_C_FLAGS_DEBUG ${z_seven} CACHE STRING "C Debug flags" FORCE)
+
+    # Use static runtime for Release builds to run with Wine without needing to install the dlls
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 else()
     # This should work for gcc and clang (including xcode which is based on clang)
     # -O2 can result in faster code than -O3 due to CPU caching.
@@ -30,9 +33,7 @@ else()
     set(CMAKE_C_FLAGS_RELEASE ${cl_optimize} CACHE STRING "C Release flags" FORCE)
 endif()
 
-get_property(isMultiConfig GLOBAL
-  PROPERTY GENERATOR_IS_MULTI_CONFIG
-)
+get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 
 if (NOT isMultiConfig)
     message("\nBecause you are using a single target generator, you MUST specify")

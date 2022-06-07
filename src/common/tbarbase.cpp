@@ -138,7 +138,6 @@ void wxToolBarToolBase::SetDropdownMenu(wxMenu* menu)
 
 wxToolBarBase::wxToolBarBase()
 {
-    // the list owns the pointers
     m_xMargin = m_yMargin = 0;
     m_maxRows = m_maxCols = 0;
     m_toolPacking = m_toolSeparation = 0;
@@ -441,7 +440,9 @@ void wxToolBarBase::DoSetToolBitmapSize(const wxSize& size)
 
 void wxToolBarBase::SetToolBitmapSize(const wxSize& size)
 {
-    m_requestedBitmapSize = size;
+    // We store this value in DIPs to avoid having to update it when the DPI
+    // changes.
+    m_requestedBitmapSize = ToDIP(size);
 
     DoSetToolBitmapSize(size);
 }
@@ -474,40 +475,46 @@ void wxToolBarBase::AdjustToolBitmapSize()
             bundles.push_back(bmp);
     }
 
-    if ( !bundles.empty() )
+    if ( bundles.empty() )
+        return;
+
+    wxSize sizeNeeded;
+
+    if ( m_requestedBitmapSize != wxSize(0, 0) )
     {
-        wxSize sizePreferred = wxBitmapBundle::GetConsensusSizeFor
-                               (
-                                this,
-                                bundles,
-                                sizeOrig
-                               );
+        // If we have a fixed requested bitmap size, use it, but scale it by
+        // integer factor only, as otherwise we'd force fractional (and hence
+        // ugly looking) scaling here whenever fractional DPI scaling is used.
 
-        // Don't do anything if it doesn't change, our current size is supposed
-        // to satisfy any constraints we might have anyhow.
-        if ( sizePreferred == sizeOrig )
-            return;
+        // We want to round 1.5 down to 1, but 1.75 up to 2.
+        int scaleFactorRoundedDown =
+            static_cast<int>(ceil(2*GetDPIScaleFactor())) / 2;
+        sizeNeeded = m_requestedBitmapSize*scaleFactorRoundedDown;
+    }
+    else // Determine the best size to use from the bitmaps we have.
+    {
+        const wxSize
+            sizePreferred = wxBitmapBundle::GetConsensusSizeFor(this, bundles);
 
-        // This size is supposed to be in logical units for the platforms where
-        // they differ from physical ones, so convert it.
+        // GetConsensusSizeFor() returns physical size, but we want to operate
+        // with logical pixels as everything else is expressed in them.
         //
         // Note that this could introduce rounding problems but, in fact,
         // neither wxGTK nor wxOSX (that are the only ports where contents
         // scale factor may be different from 1) use this size at all
         // currently, so it shouldn't matter. But if/when they are modified to
         // use the size computed here, this would need to be revisited.
-        sizePreferred /= GetContentScaleFactor();
+        sizeNeeded = FromPhys(sizePreferred);
+    }
 
-        // Don't decrease the bitmap below the size requested by the application
-        // as using larger bitmaps shouldn't shrink them to the small default
-        // size.
-        sizePreferred.IncTo(m_requestedBitmapSize);
-
+    // No need to change the bitmaps size if it doesn't really change.
+    if ( sizeNeeded != sizeOrig )
+    {
         // Call DoSetToolBitmapSize() and not SetToolBitmapSize() to avoid
         // changing the requested bitmap size: if we set our own adjusted size
         // as the preferred one, we wouldn't decrease it later even if we ought
         // to, as when moving from a monitor with higher DPI to a lower-DPI one.
-        DoSetToolBitmapSize(sizePreferred);
+        DoSetToolBitmapSize(sizeNeeded);
     }
 }
 

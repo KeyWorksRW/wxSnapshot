@@ -91,13 +91,7 @@ void wxGTKCairoDCImpl::DoDrawText(const wxString& text, int x, int y)
     if (text.empty())
         return;
 
-    cairo_t* cr = static_cast<cairo_t*>(m_graphicContext->GetNativeContext());
-    if (cr == NULL)
-        return;
-
-    double dx = 1, dy = 1;
-    cairo_user_to_device_distance(cr, &dx, &dy);
-    const bool xInverted = dx < 0;
+    const bool xInverted = m_signX < 0 || m_layoutDir == wxLayout_RightToLeft;
     if (xInverted && text.find('\n') != wxString::npos)
     {
         // RTL needs each line separately to position text properly.
@@ -109,10 +103,9 @@ void wxGTKCairoDCImpl::DoDrawText(const wxString& text, int x, int y)
     int w, h;
     DoGetTextExtent(text, &w, &h);
 
-    CalcBoundingBox(x, y);
-    CalcBoundingBox(x + w, y + h);
+    CalcBoundingBox(wxPoint(x, y), wxSize(w, h));
 
-    const bool yInverted = dy < 0;
+    const bool yInverted = m_signY < 0;
     if (xInverted || yInverted)
         m_graphicContext->PushState();
     if (xInverted)

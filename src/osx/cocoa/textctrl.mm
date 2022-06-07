@@ -1339,7 +1339,7 @@ void wxNSTextViewControl::EnableAutomaticDashSubstitution(bool enable)
         [m_textView setAutomaticDashSubstitutionEnabled:enable];
 }
 
-void wxNSTextViewControl::EnableNewLineReplacement(bool enable)
+void wxNSTextViewControl::EnableNewLineReplacement(bool WXUNUSED(enable))
 {
 }
 
@@ -1711,6 +1711,22 @@ void wxNSTextFieldControl::SetJustification()
         align = NSLeftTextAlignment;
 
     [m_textField setAlignment:align];
+}
+
+wxSize wxNSTextFieldControl::GetBestSize() const
+{
+    wxSize sz = wxDefaultSize;
+    if (  [m_textField respondsToSelector:@selector(sizeToFit)] )
+    {
+        NSRect former = [m_textField frame];
+        [m_textField sizeToFit];
+        NSRect best = [m_textField frame];
+        [m_textField setFrame:former];
+        sz.x = (int)ceil(best.size.width);
+        sz.y = (int)ceil(best.size.height);
+    }
+
+    return sz;
 }
 
 //

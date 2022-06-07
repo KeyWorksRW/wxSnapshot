@@ -333,10 +333,10 @@ wxEND_EVENT_TABLE()
 
 wxPropertyGridPage::wxPropertyGridPage()
     : wxEvtHandler(), wxPropertyGridInterface(), wxPropertyGridPageState()
+    , m_manager(NULL)
+    , m_isDefault(false)
 {
     m_pState = this; // wxPropertyGridInterface to point to State
-    m_manager = NULL;
-    m_isDefault = false;
 }
 
 wxPropertyGridPage::~wxPropertyGridPage()
@@ -395,10 +395,10 @@ class wxPGHeaderCtrl : public wxHeaderCtrl
 {
 public:
     wxPGHeaderCtrl(wxPropertyGridManager* manager, wxWindowID id, const wxPoint& pos,
-                   const wxSize& size, long style) :
-        wxHeaderCtrl(manager, id, pos, size, style)
+                   const wxSize& size, long style)
+        : wxHeaderCtrl(manager, id, pos, size, style)
+        , m_manager(manager)
     {
-        m_manager = manager;
         EnsureColumnCount(2);
 
         // Seed titles with defaults
@@ -860,22 +860,6 @@ void wxPropertyGridManager::SetExtraStyle( long exStyle )
     if ( toolbarStyleChanged && m_pToolbar )
         RecreateControls();
 #endif
-}
-
-// -----------------------------------------------------------------------
-
-void wxPropertyGridManager::DoFreeze()
-{
-    m_pPropGrid->Freeze();
-    wxWindow::DoFreeze();
-}
-
-// -----------------------------------------------------------------------
-
-void wxPropertyGridManager::DoThaw()
-{
-    wxWindow::DoThaw();
-    m_pPropGrid->Thaw();
 }
 
 // -----------------------------------------------------------------------
@@ -1646,13 +1630,6 @@ void wxPropertyGridManager::OnPaint( wxPaintEvent& WXUNUSED(event) )
 
 // -----------------------------------------------------------------------
 
-void wxPropertyGridManager::Refresh(bool eraseBackground, const wxRect* rect )
-{
-    wxPanel::Refresh(eraseBackground, rect);
-}
-
-// -----------------------------------------------------------------------
-
 void wxPropertyGridManager::RefreshProperty( wxPGProperty* p )
 {
     wxASSERT( p->IsRoot() ||
@@ -2095,7 +2072,7 @@ void wxPropertyGridManager::SetSplitterLeft( bool subProps, bool allPages )
 
         for ( size_t i = 0; i < GetPageCount(); i++ )
         {
-            int maxW = m_pState->GetColumnFitWidth(dc, m_arrPages[i]->DoGetRoot(), 0, subProps );
+            int maxW = m_pState->GetColumnFitWidth(m_arrPages[i]->DoGetRoot(), 0, subProps );
             maxW += m_pPropGrid->GetMarginWidth();
             if ( maxW > highest )
                 highest = maxW;
@@ -2122,7 +2099,7 @@ void wxPropertyGridManager::SetPageSplitterLeft(int page, bool subProps)
         wxClientDC dc(this);
         dc.SetFont(m_pPropGrid->GetFont());
 
-        int maxW = m_pState->GetColumnFitWidth(dc, m_arrPages[page]->DoGetRoot(), 0, subProps );
+        int maxW = m_pState->GetColumnFitWidth(m_arrPages[page]->DoGetRoot(), 0, subProps );
         maxW += m_pPropGrid->GetMarginWidth();
         SetPageSplitterPosition( page, maxW );
 
