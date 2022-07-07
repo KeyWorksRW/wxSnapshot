@@ -381,7 +381,7 @@
 //
 // Recommended setting: 1 unless you want to ensure your program doesn't use
 //                      the standard C++ library at all.
-#define wxUSE_STD_STRING wxUSE_STD_DEFAULT
+#define wxUSE_STD_STRING 1
 
 // Make wxString as much interchangeable with std::[w]string as possible, in
 // particular allow implicit conversion of wxString to either of these classes.
@@ -813,6 +813,13 @@
 //
 // Recommended setting: 1 when building for Windows with WebView2 SDK
 #define wxUSE_WEBVIEW_EDGE 0
+
+// Use the Edge (Chromium) wxWebView backend without loader DLL
+//
+// Default is 0, set it to 1 if you don't want to depend on WebView2Loader.dll.
+//
+// Recommended setting: 0
+#define wxUSE_WEBVIEW_EDGE_STATIC 0
 
 // Use the WebKit wxWebView backend
 //
@@ -1487,7 +1494,7 @@
 //
 // Recommended setting (at present): 1 (MSW-only)
 #ifdef __WXMSW__
-#define wxUSE_ACCESSIBILITY 0
+#define wxUSE_ACCESSIBILITY 1
 #else
 #define wxUSE_ACCESSIBILITY 0
 #endif
