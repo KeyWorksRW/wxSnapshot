@@ -1,5 +1,4 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        wx/msw/setup.h
 // Purpose:     Configuration for the library
 // Author:      Julian Smart
 // Modified by:
@@ -8,8 +7,19 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef _WX_SETUP_H_
-#define _WX_SETUP_H_
+#pragma once
+
+// Combined msw/setup.h, gtk/setup.h, motif/setup.h and osx/setup.h
+
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WXMSW__)
+#    ifndef __WINDOWS__
+#        define __WINDOWS__
+#    endif /* !__WINDOWS__ */
+#endif /* Any standard symbol indicating Windows */
+
+#if !defined(__WINDOWS__) && !defined(__APPLE__)
+    #define __UNIX__
+#endif
 
 /* --- start common options --- */
 // ----------------------------------------------------------------------------
@@ -20,7 +30,7 @@
 // makefile/project file overriding the value here
 #ifndef wxUSE_GUI
     #define wxUSE_GUI            1
-#endif // wxUSE_GUI
+#endif
 
 // ----------------------------------------------------------------------------
 // compatibility settings
@@ -178,7 +188,6 @@
 //
 // Recommended setting: 0
 #define wxUSE_DEBUG_NEW_ALWAYS 0
-
 
 // ----------------------------------------------------------------------------
 // Unicode support
@@ -372,7 +381,7 @@
 //
 // Recommended setting: 1 unless you want to ensure your program doesn't use
 //                      the standard C++ library at all.
-#define wxUSE_STD_STRING  wxUSE_STD_DEFAULT
+#define wxUSE_STD_STRING 1
 
 // Make wxString as much interchangeable with std::[w]string as possible, in
 // particular allow implicit conversion of wxString to either of these classes.
@@ -708,8 +717,9 @@
 //
 // Default is 1.
 //
-// Recommended setting: 1 unless you want to reduce the library size by a small amount,
-// or your compiler cannot for some reason cope with complexity of templates used.
+// Recommended setting: 1 unless you want to reduce the library size by a small
+// amount, or your compiler cannot for some reason cope with complexity of
+// templates used.
 #define wxUSE_ANY 1
 
 // Support for regular expression matching via wxRegEx class: enable this to
@@ -798,10 +808,18 @@
 
 // Use the Edge (Chromium) wxWebView backend (Requires WebView2 SDK)
 //
-// Default is 0 because WebView2 is not always available, set it to 1 if you do have it.
+// Default is 0 because WebView2 is not always available, set it to 1 if you do
+// have it.
 //
 // Recommended setting: 1 when building for Windows with WebView2 SDK
 #define wxUSE_WEBVIEW_EDGE 0
+
+// Use the Edge (Chromium) wxWebView backend without loader DLL
+//
+// Default is 0, set it to 1 if you don't want to depend on WebView2Loader.dll.
+//
+// Recommended setting: 0
+#define wxUSE_WEBVIEW_EDGE_STATIC 0
 
 // Use the WebKit wxWebView backend
 //
@@ -860,7 +878,6 @@
 //
 // Recommended setting: 0
 #define wxUSE_CAIRO 0
-
 
 // ----------------------------------------------------------------------------
 // Individual GUI controls
@@ -1477,7 +1494,7 @@
 //
 // Recommended setting (at present): 1 (MSW-only)
 #ifdef __WXMSW__
-    #define wxUSE_ACCESSIBILITY 0
+#define wxUSE_ACCESSIBILITY 1
 #else
     #define wxUSE_ACCESSIBILITY 0
 #endif
@@ -1510,7 +1527,6 @@
 // Recommended setting: 1, only set to 0 if you have trouble compiling
 // wxCHMHelpController (could be a problem with really ancient compilers)
 #define wxUSE_MS_HTML_HELP 1
-
 
 // Use wxHTML-based help controller?
 #define wxUSE_WXHTML_HELP 1
@@ -1574,6 +1590,12 @@
 
 // Set to 1 for TIFF format support (requires libtiff)
 #define wxUSE_LIBTIFF       1
+
+// Set to 1 for SVG rasterizing support using nanosvg
+#define wxUSE_NANOSVG       1
+
+// Set to 1 to use external nanosvg library when wxUSE_NANOSVG is enabled
+#define wxUSE_NANOSVG_EXTERNAL 0
 
 // Set to 1 for TGA format support (loading only)
 #define wxUSE_TGA           1
@@ -1655,6 +1677,8 @@
 // Recommended setting: 1, can be set to 0 if wxUSE_WEBREQUEST_CURL==1,
 // otherwise wxWebRequest won't be available at all.
 #define wxUSE_WEBREQUEST_WINHTTP 1
+
+#if defined(__WINDOWS__) || defined(__UNIX__)
 
 // ----------------------------------------------------------------------------
 // Windows-only settings
@@ -1826,6 +1850,199 @@
 //
 // Recommended setting: 1, set to 0 if your programs never crash
 #define wxUSE_CRASHREPORT 1
-/* --- end MSW options --- */
 
-#endif // _WX_SETUP_H_
+#endif  // defined(__WINDOWS__) || defined(__UNIX__)
+
+#if defined(__UNIX__)
+
+// exact GTK version (without including GTK+ headers that we don't want to
+// include from our own public headers), just assume a recent GTK 2.x.
+#define __WXGTK20__
+#define __WXGTK210__
+#define __WXGTK218__
+//#define __WXGTK3__
+
+#endif
+
+#if !defined(__WINDOWS__) && !defined(__UNIX__)
+
+#undef wxUSE_GRAPHICS_CONTEXT
+#define wxUSE_GRAPHICS_CONTEXT 1
+
+#undef wxUSE_STACKWALKER
+#define wxUSE_STACKWALKER 0
+
+// wxWebKit is a wrapper for Apple's WebKit framework, use it if you want to
+// embed the Safari browser control
+// 0 by default because of Jaguar compatibility problems
+#define wxUSE_WEBKIT        1
+
+// Set to 0 for no libmspack
+#define wxUSE_LIBMSPACK     0
+
+// native toolbar does support embedding controls, but not complex panels, please test
+#define wxOSX_USE_NATIVE_TOOLBAR 1
+
+// make sure we have the proper dispatcher for the console event loop
+#define wxUSE_SELECT_DISPATCHER 1
+#define wxUSE_EPOLL_DISPATCHER 0
+
+// set to 1 if you have older code that still needs icon refs
+#define wxOSX_USE_ICONREF 0
+
+// set to 0 if you have code that has problems with the new bitmap implementation
+#define wxOSX_BITMAP_NATIVE_ACCESS 1
+
+#endif
+
+#if defined(__WXMAC_XCODE__)
+
+// while configure based builds have the flags prepended, we must do this here
+// for xcode based builds
+#define HAVE_SSIZE_T 1
+#define STDC_HEADERS 1
+#ifdef __BIG_ENDIAN__
+#define WORDS_BIGENDIAN 1
+#endif
+#define wxUSE_UNIX 1
+#define __UNIX__ 1
+#define __BSD__ 1
+#define __DARWIN__ 1
+#define wx_USE_NANOX 0
+
+#define HAVE_VA_COPY 1
+#define HAVE_STD_WSTRING 1
+
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2)
+    #if !defined(__has_include)
+        #define HAVE_TR1_UNORDERED_MAP 1
+        #define HAVE_TR1_UNORDERED_SET 1
+        #define HAVE_TR1_TYPE_TRAITS 1
+    #endif
+    #define HAVE_GCC_ATOMIC_BUILTINS 1
+#endif
+
+#define HAVE_VISIBILITY 1
+#define wxHAVE_PTHREAD_CLEANUP 1
+#define CONST_COMPATIBILITY 0
+#define WX_TIMEZONE timezone
+#define WX_SOCKLEN_T socklen_t
+#define SOCKOPTLEN_T socklen_t
+#define WX_STATFS_T struct statfs
+#define wxTYPE_SA_HANDLER int
+#define WX_GMTOFF_IN_TM 1
+#define HAVE_PW_GECOS 1
+#define HAVE_DLOPEN 1
+#define HAVE_CXA_DEMANGLE 1
+#define HAVE_GETTIMEOFDAY 1
+#define HAVE_FSYNC 1
+#define HAVE_ROUND 1
+#define HAVE_SCHED_YIELD 1
+#define HAVE_PTHREAD_MUTEXATTR_T 1
+#define HAVE_PTHREAD_MUTEXATTR_SETTYPE_DECL 1
+#define HAVE_PTHREAD_CANCEL 1
+#define HAVE_PTHREAD_ATTR_SETSTACKSIZE 1
+#define HAVE_SNPRINTF 1
+#define HAVE_SNPRINTF_DECL 1
+#define HAVE_UNIX98_PRINTF 1
+#define HAVE_STATFS 1
+#define HAVE_STATFS_DECL 1
+#define HAVE_STRNLEN 1
+#define HAVE_STRPTIME 1
+#define HAVE_STRPTIME_DECL 1
+#define HAVE_STRTOULL 1
+#define HAVE_THREAD_PRIORITY_FUNCTIONS 1
+#define HAVE_VSNPRINTF 1
+#define HAVE_VSNPRINTF_DECL 1
+#define HAVE_VSSCANF 1
+#define HAVE_VSSCANF_DECL 1
+#define HAVE_USLEEP 1
+#define HAVE_WCSCASECMP 1
+#define HAVE_WCSDUP 1
+#define HAVE_WCSLEN 1
+#define HAVE_WCSNCASECMP 1
+#define HAVE_WCSNLEN 1
+#define SIZEOF_WCHAR_T 4
+#define SIZEOF_SHORT 2
+#define SIZEOF_INT 4
+
+#ifdef __LP64__
+    #define SIZEOF_VOID_P 8
+    #define SIZEOF_LONG 8
+    #define SIZEOF_SIZE_T 8
+#else
+    #define SIZEOF_VOID_P 4
+    #define SIZEOF_LONG 4
+    #define SIZEOF_SIZE_T 4
+#endif
+
+#define SIZEOF_LONG_LONG 8
+#define wxSIZE_T_IS_ULONG 1
+#define wxWCHAR_T_IS_REAL_TYPE 1
+#define HAVE_FCNTL 1
+#define HAVE_GETHOSTBYNAME 1
+#define HAVE_GETSERVBYNAME 1
+#define HAVE_GMTIME_R 1
+#define HAVE_INET_ADDR 1
+#define HAVE_INET_ATON 1
+#define HAVE_LOCALTIME_R 1
+#define HAVE_MKSTEMP 1
+#define HAVE_SETENV 1
+/* #define HAVE_PUTENV 1 */
+#define HAVE_STRTOK_R 1
+#define HAVE_UNAME 1
+#define HAVE_USLEEP 1
+#define HAVE_X11_XKBLIB_H 1
+#define HAVE_SCHED_H 1
+#define HAVE_UNISTD_H 1
+#define HAVE_WCHAR_H 1
+/* better to use the built-in CF conversions, also avoid iconv versioning
+ * problems */
+/* #undef HAVE_ICONV */
+#define ICONV_CONST
+#define HAVE_LANGINFO_H 1
+#define HAVE_WCSRTOMBS 1
+#define HAVE_FPUTWS 1
+#define HAVE_WPRINTF 1
+#define HAVE_VSWPRINTF 1
+#define HAVE_VSWSCANF 1
+#define HAVE_FSEEKO 1
+#define HAVE_SYS_SELECT_H 1
+#define HAVE_FDOPEN 1
+#define HAVE_SYSCONF 1
+#define HAVE_GETPWUID_R 1
+#define HAVE_GETGRGID_R 1
+#define HAVE_LOCALE_T 1
+#define HAVE_XLOCALE_H 1
+#define wxHAS_KQUEUE 1
+
+// #define PACKAGE_BUGREPORT "wx-dev@googlegroups.com"
+// #define PACKAGE_NAME "wxWidgets"
+// #define PACKAGE_STRING "wxWidgets 3.1.6"
+// #define PACKAGE_TARNAME "wxwidgets"
+// #define PACKAGE_VERSION "3.1.6"
+
+// for regex
+#define WX_NO_REGEX_ADVANCED 1
+
+// for jpeg
+
+#define HAVE_STDLIB_H 1
+
+// OBSOLETE ?
+
+#define HAVE_COS 1
+#define HAVE_FLOOR 1
+#define HAVE_INTTYPES_H 1
+#define HAVE_MEMORY_H 1
+
+#define HAVE_REGCOMP 1
+#define HAVE_STRINGS_H 1
+#define HAVE_STRING_H 1
+#define HAVE_SYS_STAT_H 1
+#define HAVE_SYS_TYPES_H 1
+#define HAVE_X11_XLIB_H 1
+#define SOCKLEN_T socklen_t
+#define _FILE_OFFSET_BITS 64
+
+#endif  // defined(__WXMAC_XCODE__)
