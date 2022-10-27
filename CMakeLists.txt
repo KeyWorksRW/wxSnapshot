@@ -2,8 +2,17 @@ cmake_minimum_required(VERSION 3.20)
 
 project(wxWidgets LANGUAGES CXX C)
 
-get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+####################### Options #######################
 
+option(BUILD_SHARED_LIBS "Build with wxWidgets shared libraries" OFF)
+
+if (BUILD_SHARED_LIBS)
+    message(NOTICE "Building with wxWidgets shared libraries")
+endif()
+
+####################### Check for Multi-Config Generator #######################
+
+get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if (NOT isMultiConfig)
     message("\nBecause you are using a single target generator, you MUST specify")
     message("    a \"--config [Debug|Release]\" option with the cmake --build command\n")
@@ -17,6 +26,8 @@ if (NOT isMultiConfig)
         message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
     endif()
 endif()
+
+####################### General Settings #######################
 
 set(CMAKE_CXX_STANDARD 17) # future-proofing, wxWidgets 3.3 requires C++11, 3.4 will require C++14, etc.
 set(CMAKE_CXX_STANDARD_REQUIRED True)
