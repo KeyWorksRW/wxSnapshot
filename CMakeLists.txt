@@ -39,7 +39,9 @@ if (MSVC)
     set(CMAKE_C_FLAGS_DEBUG ${z_seven} CACHE STRING "C Debug flags" FORCE)
 
     # Use static runtime for Release builds to run with Wine without needing to install the dlls
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    if (NOT BUILD_SHARED_LIBS)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 else()
     # This should work for gcc and clang (including xcode which is based on clang)
     # -O2 can result in faster code than -O3 due to CPU caching.
