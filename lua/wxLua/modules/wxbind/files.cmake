@@ -1,3 +1,0 @@
-set (wxBind_sources
-
-)
