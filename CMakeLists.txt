@@ -2,7 +2,34 @@ cmake_minimum_required(VERSION 3.20)
 
 project(wxWidgets LANGUAGES CXX C)
 
-set(CMAKE_CXX_STANDARD 17)
+####################### Options #######################
+
+option(BUILD_SHARED_LIBS "Build with wxWidgets shared libraries" OFF)
+
+if (BUILD_SHARED_LIBS)
+    message(NOTICE "Building with wxWidgets shared libraries")
+endif()
+
+####################### Check for Multi-Config Generator #######################
+
+get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if (NOT isMultiConfig)
+    message("\nBecause you are using a single target generator, you MUST specify")
+    message("    a \"--config [Debug|Release]\" option with the cmake --build command\n")
+
+    set(allowedBuildTypes Debug Release)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${allowedBuildTypes}")
+
+    if (NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
+    elseif (NOT CMAKE_BUILD_TYPE IN_LIST allowedBuildTypes)
+        message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
+    endif()
+endif()
+
+####################### General Settings #######################
+
+set(CMAKE_CXX_STANDARD 17) # future-proofing, wxWidgets 3.3 requires C++11, 3.4 will require C++14, etc.
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -23,7 +50,9 @@ if (MSVC)
     set(CMAKE_C_FLAGS_DEBUG ${z_seven} CACHE STRING "C Debug flags" FORCE)
 
     # Use static runtime for Release builds to run with Wine without needing to install the dlls
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    if (NOT BUILD_SHARED_LIBS)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 else()
     # This should work for gcc and clang (including xcode which is based on clang)
     # -O2 can result in faster code than -O3 due to CPU caching.
@@ -33,31 +62,15 @@ else()
     set(CMAKE_C_FLAGS_RELEASE ${cl_optimize} CACHE STRING "C Release flags" FORCE)
 endif()
 
-get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-
-if (NOT isMultiConfig)
-    message("\nBecause you are using a single target generator, you MUST specify")
-    message("    a \"--config [Debug|Release]\" option with the cmake --build command\n")
-
-    set(allowedBuildTypes Debug Release)
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${allowedBuildTypes}")
-
-    if (NOT CMAKE_BUILD_TYPE)
-        set(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
-    elseif (NOT CMAKE_BUILD_TYPE IN_LIST allowedBuildTypes)
-        message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
-    endif()
-endif()
-
 include(src/wxWidgets.cmake) # This will set ${common_sources}, ${msw_sources}, ${unix_sources} and ${osx_sources}
 include(src/wxCLib.cmake)    # This will set ${wxCLib_sources} with list of files
 
 if (WIN32)
-    add_library(wxWidgets STATIC ${common_sources} ${msw_sources} )
+    add_library(wxWidgets ${common_sources} ${msw_sources})
 elseif (APPLE)
-    add_library(wxWidgets STATIC ${common_sources} ${osx_sources} )
+    add_library(wxWidgets ${common_sources} ${osx_sources} )
 elseif (UNIX)
-    add_library(wxWidgets STATIC ${common_sources} ${unix_sources} )
+    add_library(wxWidgets ${common_sources} ${unix_sources} )
 endif()
 
 add_library(wxCLib STATIC ${wxCLib_sources} )
@@ -72,6 +85,10 @@ if (WIN32)
         __WXMSW__
         WIN32
     )
+endif()
+
+if (BUILD_SHARED_LIBS)
+    target_compile_definitions(wxWidgets PRIVATE WXMAKINGDLL)
 endif()
 
 target_compile_definitions(wxWidgets PRIVATE
@@ -143,3 +160,9 @@ target_include_directories(wxCLib PRIVATE
     src/zlib
     src/expat/expat/lib
 )
+
+if (BUILD_SHARED_LIBS)
+    if (WIN32)
+        target_link_libraries(wxWidgets PRIVATE wxCLib Winmm Ws2_32 Rpcrt4 Comctl32)
+    endif()
+endif()

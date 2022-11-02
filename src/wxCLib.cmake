@@ -128,6 +128,7 @@ set (wxCLib_sources
     # wx_wxregex
 
     ${CMAKE_CURRENT_LIST_DIR}/pcre/pcre2_auto_possess.c
+    ${CMAKE_CURRENT_LIST_DIR}/pcre/pcre2_chartables.c
     ${CMAKE_CURRENT_LIST_DIR}/pcre/pcre2_compile.c
     ${CMAKE_CURRENT_LIST_DIR}/pcre/pcre2_config.c
     ${CMAKE_CURRENT_LIST_DIR}/pcre/pcre2_context.c
