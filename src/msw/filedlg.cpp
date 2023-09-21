@@ -714,6 +714,20 @@ public:
 
 
 #if wxUSE_IFILEOPENDIALOG
+    // Store the extra shortcut directories and their flags.
+    struct ShortcutData
+    {
+        ShortcutData(const wxString& path_, int flags_)
+            : path(path_), flags(flags_)
+        {
+        }
+
+        wxString path;
+        int flags;
+    };
+    wxVector<ShortcutData> m_customShortcuts;
+
+
     // IUnknown
 
     wxSTDMETHODIMP QueryInterface(REFIID iid, void** ppv)
@@ -1181,6 +1195,28 @@ void wxFileDialog::MSWOnInitDialogHook(WXHWND hwnd)
     CreateExtraControl();
 }
 
+bool wxFileDialog::AddShortcut(const wxString& directory, int flags)
+{
+#if wxUSE_IFILEOPENDIALOG
+    if ( !HasExtraControlCreator() )
+    {
+        MSWData().m_customShortcuts.push_back(
+            wxFileDialogMSWData::ShortcutData(directory, flags)
+        );
+
+        return true;
+    }
+    else
+    {
+        // It could be surprising if AddShortcut() silently didn't work, so
+        // warn the developer about this incompatibility.
+        wxFAIL_MSG("Can't use both AddShortcut() and SetExtraControlCreator()");
+    }
+#endif // wxUSE_IFILEOPENDIALOG
+
+    return false;
+}
+
 int wxFileDialog::ShowModal()
 {
     WX_HOOK_MODAL_DIALOG();
@@ -1308,7 +1344,7 @@ int wxFileDialog::ShowCommFileDialog(WXHWND hWndParent)
 
     // Convert forward slashes to backslashes (file selector doesn't like
     // forward slashes) and also squeeze multiple consecutive slashes into one
-    // as it doesn't like two backslashes in a row neither
+    // as it doesn't like two backslashes in a row either
 
     wxString  dir;
     size_t    i, len = m_dir.length();
@@ -1561,6 +1597,16 @@ int wxFileDialog::ShowIFileDialog(WXHWND hWndParent)
         hr = fileDialog->SetFileTypeIndex(m_filterIndex + 1);
         if ( FAILED(hr) )
             wxLogApiError(wxS("IFileDialog::SetFileTypeIndex"), hr);
+
+        // We need to call SetDefaultExtension() to make the file dialog append
+        // the selected extension by default. It will append the correct
+        // extension depending on the current file type choice if we call this
+        // function, but won't do anything at all without it, so find the first
+        // extension associated with the selected filter and use it here.
+        wxString defExt =
+            wildFilters[m_filterIndex].BeforeFirst(';').AfterFirst('.');
+        if ( !defExt.empty() && defExt != wxS("*") )
+            fileDialog->SetDefaultExtension(defExt.wc_str());
     }
 
     if ( !m_dir.empty() )
@@ -1572,9 +1618,26 @@ int wxFileDialog::ShowIFileDialog(WXHWND hWndParent)
     {
         hr = fileDialog->SetFileName(m_fileName.wc_str());
         if ( FAILED(hr) )
-            wxLogApiError(wxS("IFileDialog::SetDefaultExtension"), hr);
+            wxLogApiError(wxS("IFileDialog::SetFileName"), hr);
     }
 
+
+    for ( wxVector<wxFileDialogMSWData::ShortcutData>::const_iterator
+            it = data.m_customShortcuts.begin();
+            it != data.m_customShortcuts.end();
+            ++it )
+    {
+        FDAP fdap = FDAP_BOTTOM;
+        if ( it->flags & wxFD_SHORTCUT_TOP )
+        {
+            wxASSERT_MSG( !(it->flags & wxFD_SHORTCUT_BOTTOM),
+                          wxS("Can't use both wxFD_SHORTCUT_TOP and BOTTOM") );
+
+            fdap = FDAP_TOP;
+        }
+
+        fileDialog.AddPlace(it->path, fdap);
+    }
 
     // We never set the following flags currently:
     //

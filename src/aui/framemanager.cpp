@@ -3902,7 +3902,8 @@ void wxAuiManager::Render(wxDC* dc)
 
 void wxAuiManager::Repaint(wxDC* dc)
 {
-#ifdef __WXMAC__
+#if defined(__WXMAC__) || defined(__WXGTK3__)
+    // We can't use wxClientDC in these ports.
     if ( dc == NULL )
     {
         m_frame->Refresh() ;
@@ -4851,7 +4852,7 @@ void wxAuiManager::OnPaneButton(wxAuiManagerEvent& evt)
 
             if (e.GetVeto())
             {
-                // If it can't be restored, it can't be floated neither.
+                // If it can't be restored, it can't be floated either.
                 return;
             }
 

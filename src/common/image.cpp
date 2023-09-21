@@ -390,11 +390,11 @@ wxImage wxImage::ShrinkBy( int xFactor , int yFactor ) const
                     unsigned char red = pixel[0] ;
                     unsigned char green = pixel[1] ;
                     unsigned char blue = pixel[2] ;
-                    unsigned char alpha = 255  ;
-                    if ( source_alpha )
-                        alpha = *(source_alpha + y_offset + x * xFactor + x1) ;
                     if ( !hasMask || red != maskRed || green != maskGreen || blue != maskBlue )
                     {
+                        unsigned char alpha = 255  ;
+                        if ( source_alpha )
+                            alpha = *(source_alpha + y_offset + x * xFactor + x1) ;
                         if ( alpha > 0 )
                         {
                             avgRed += red ;
@@ -673,7 +673,8 @@ wxImage wxImage::ResampleBox(int width, int height) const
             const BoxPrecalc& hPrecalc = hPrecalcs[x];
 
             // Box of pixels to average
-            averaged_pixels = 0;
+            averaged_pixels = (vPrecalc.boxEnd - vPrecalc.boxStart + 1)
+                                * (hPrecalc.boxEnd - hPrecalc.boxStart + 1);
             sum_r = sum_g = sum_b = sum_a = 0.0;
 
             for ( int j = vPrecalc.boxStart; j <= vPrecalc.boxEnd; ++j )
@@ -696,8 +697,6 @@ wxImage wxImage::ResampleBox(int width, int height) const
                         sum_g += src_data[src_pixel_index * 3 + 1];
                         sum_b += src_data[src_pixel_index * 3 + 2];
                     }
-
-                    averaged_pixels++;
                 }
             }
 

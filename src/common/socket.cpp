@@ -62,7 +62,7 @@
     #define wxSOCKET_MSG_NOSIGNAL MSG_NOSIGNAL
 #else // MSG_NOSIGNAL not available (BSD including OS X)
     // next best possibility is to use SO_NOSIGPIPE socket option, this covers
-    // BSD systems (including OS X) -- but if we don't have it neither (AIX and
+    // BSD systems (including OS X) -- but if we don't have it either (AIX and
     // old HP-UX do not), we have to fall back to the old way of simply
     // disabling SIGPIPE temporarily, so define a class to do it in a safe way
     #if defined(__UNIX__) && !defined(SO_NOSIGPIPE)
@@ -1131,6 +1131,14 @@ wxSocketBase& wxSocketBase::ReadMsg(void* buffer, wxUint32 nbytes)
 
 wxSocketBase& wxSocketBase::Peek(void* buffer, wxUint32 nbytes)
 {
+    // If we're already closed, don't try switching the invalid socket into
+    // non-blocking mode, but still use the already read data, if any.
+    if ( m_impl->m_fd == INVALID_SOCKET )
+    {
+        m_lcount = GetPushback(buffer, nbytes, true);
+        return *this;
+    }
+
     wxSocketReadGuard read(this);
 
     // Peek() should never block

@@ -145,7 +145,15 @@ class wxPGGlobalVarsClassManager : public wxModule
     wxDECLARE_DYNAMIC_CLASS(wxPGGlobalVarsClassManager);
 public:
     wxPGGlobalVarsClassManager() {}
-    virtual bool OnInit() wxOVERRIDE { wxPGGlobalVars = new wxPGGlobalVarsClass(); return true; }
+    virtual bool OnInit() wxOVERRIDE
+    {
+        // This shouldn't happen, but we can actually be more called more than
+        // once, e.g. wxPython does it, see #23165, and in this case we
+        // shouldn't lose the current state.
+        if ( !wxPGGlobalVars )
+            wxPGGlobalVars = new wxPGGlobalVarsClass();
+        return true;
+    }
     virtual void OnExit() wxOVERRIDE { wxDELETE(wxPGGlobalVars); }
 };
 
@@ -1147,7 +1155,7 @@ wxSize wxPropertyGrid::DoGetBestSize() const
     int lineHeight = wxMax(FromDIP(15), m_lineHeight);
 
     // don't make the grid too tall (limit height to 10 items) but don't
-    // make it too small neither
+    // make it too small either
     int numLines = wxMin
                    (
                     wxMax(m_pState->DoGetRoot()->GetChildCount(), 3),

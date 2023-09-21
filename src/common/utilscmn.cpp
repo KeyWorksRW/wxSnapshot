@@ -1435,7 +1435,7 @@ wxVersionInfo wxGetLibraryVersionInfo()
                          wxMINOR_VERSION,
                          wxRELEASE_NUMBER,
                          msg,
-                         wxS("Copyright (c) 1992-2022 wxWidgets team"));
+                         wxS("Copyright (c) 1992-2023 wxWidgets team"));
 }
 
 void wxInfoMessageBox(wxWindow* parent)
@@ -1582,7 +1582,7 @@ wxWindowDisabler::~wxWindowDisabler()
         {
             winTop->Enable();
         }
-        //else: we didn't disable this window, so don't reenable it neither
+        //else: we didn't disable this window, so don't reenable it either
     }
 }
 
