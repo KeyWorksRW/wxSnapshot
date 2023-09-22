@@ -70,7 +70,7 @@ public:
     // individually)
     bool SelectRange(unsigned itemFrom, unsigned itemTo,
                      bool select = true,
-                     wxArrayInt *itemsChanged = NULL);
+                     wxArrayInt *itemsChanged = nullptr);
 
     // return true if the given item is selected
     bool IsSelected(unsigned item) const;
@@ -85,8 +85,13 @@ public:
     // return the total number of selected items
     unsigned GetSelectedCount() const
     {
-        return m_defaultState ? m_count - m_itemsSel.GetCount()
-                              : m_itemsSel.GetCount();
+        // we can we never have more than UINT_MAX selected items, knowing that
+        // we store the total number of items in an unsigned m_count, so the
+        // cast is safe.
+        return static_cast<unsigned>(
+                m_defaultState ? m_count - m_itemsSel.GetCount()
+                               : m_itemsSel.GetCount()
+                );
     }
 
     // type of a "cookie" used to preserve the iteration state, this is an

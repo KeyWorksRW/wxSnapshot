@@ -72,7 +72,7 @@ wxAuiFloatingFrame::~wxAuiFloatingFrame()
     // if we do not do this, then we can crash...
     if (m_ownerMgr && m_ownerMgr->m_actionWindow == this)
     {
-        m_ownerMgr->m_actionWindow = NULL;
+        m_ownerMgr->m_actionWindow = nullptr;
     }
 
     m_mgr.UnInit();
@@ -207,7 +207,7 @@ void wxAuiFloatingFrame::OnMoveEvent(wxMoveEvent& event)
     if (m_ownerMgr)
     {
         m_ownerMgr->GetPane(m_paneWindow).
-            floating_pos = event.GetPosition();
+            floating_pos = GetRect().GetPosition();
     }
 
     if (!m_solidDrag)

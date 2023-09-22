@@ -108,8 +108,8 @@ void wxFileDialog::Init()
 {
     m_filterIndex = -1;
     m_delegate = nil;
-    m_filterPanel = NULL;
-    m_filterChoice = NULL;
+    m_filterPanel = nullptr;
+    m_filterChoice = nullptr;
     m_useFileTypeFilter = false;
     m_firstFileTypeFilter = 0;
 }
@@ -125,6 +125,16 @@ void wxFileDialog::Create(
 
 wxFileDialog::~wxFileDialog()
 {
+    if ( m_extraControl )
+    {
+        m_extraControl->Destroy();
+        // if this is set, then m_filterPanel points to the same instance
+        // so no need to delete that one as well
+    }
+    else if ( m_filterPanel )
+    {
+        m_filterPanel->Destroy();
+    }
 }
 
 bool wxFileDialog::SupportsExtraControl() const
@@ -242,7 +252,7 @@ void wxFileDialog::ShowWindowModal()
     wxCFStringRef dir( m_dir );
     wxCFStringRef file( m_fileName );
 
-    wxNonOwnedWindow* parentWindow = NULL;
+    wxNonOwnedWindow* parentWindow = nullptr;
     
     m_modality = wxDIALOG_MODALITY_WINDOW_MODAL;
 
@@ -321,7 +331,7 @@ wxWindow* wxFileDialog::CreateFilterPanel(wxWindow *extracontrol)
     // and then reparenting extracontrol. Reparenting is less desired as user
     // code may expect the parent to be a wxFileDialog as on other platforms.
     const bool useExtraControlAsPanel = extracontrol &&
-        wxDynamicCast(extracontrol, wxPanel) != NULL;
+        wxDynamicCast(extracontrol, wxPanel) != nullptr;
 
     wxWindow* extrapanel = useExtraControlAsPanel
                             ? extracontrol
@@ -357,7 +367,7 @@ wxWindow* wxFileDialog::CreateFilterPanel(wxWindow *extracontrol)
         if ( useExtraControlAsPanel && existingSizer )
         {
             // Move extra control's sizer to verticalSizer.
-            extracontrol->SetSizer(NULL, /* deleteOld = */ false);
+            extracontrol->SetSizer(nullptr, /* deleteOld = */ false);
             verticalSizer->Add(existingSizer);
         }
         else
@@ -407,13 +417,13 @@ void wxFileDialog::SetupExtraControls(WXWindow nativeWindow)
     // for sandboxed app we cannot access the outer structures
     // this leads to problems with extra controls, so as a temporary
     // workaround for crashes we don't support those yet
-    if ( [panel contentView] == nil || getenv("APP_SANDBOX_CONTAINER_ID") != NULL )
+    if ( [panel contentView] == nil || getenv("APP_SANDBOX_CONTAINER_ID") != nullptr )
         return;
     
     wxNonOwnedWindow::Create( GetParent(), nativeWindow );
 
     // This won't do anything if there are no extra controls to create and
-    // extracontrol will be NULL in this case.
+    // extracontrol will be null in this case.
     CreateExtraControl();
     wxWindow* const extracontrol = GetExtraControl();
 
@@ -426,8 +436,8 @@ void wxFileDialog::SetupExtraControls(WXWindow nativeWindow)
     }
     else
     {
-        m_filterPanel = NULL;
-        m_filterChoice = NULL;
+        m_filterPanel = nullptr;
+        m_filterChoice = nullptr;
         if ( extracontrol != nil )
             accView = extracontrol->GetHandle();
     }
@@ -436,10 +446,13 @@ void wxFileDialog::SetupExtraControls(WXWindow nativeWindow)
     {
         [accView removeFromSuperview];
         [panel setAccessoryView:accView];
+
+        wxCLANG_WARNING_SUPPRESS(undeclared-selector)
         if ([panel respondsToSelector:@selector(setAccessoryViewDisclosed)])
         {
             [(id)panel setAccessoryViewDisclosed:YES];
         }
+        wxCLANG_WARNING_RESTORE(undeclared-selector)
     }
     else
     {
@@ -494,14 +507,7 @@ int wxFileDialog::ShowModal()
     m_fileNames.Clear();
     m_paths.Clear();
 
-    wxNonOwnedWindow* parentWindow = NULL;
     int returnCode = -1;
-
-    if (GetParent())
-    {
-        parentWindow = dynamic_cast<wxNonOwnedWindow*>(wxGetTopLevelParent(GetParent()));
-    }
-
 
     NSArray* types = GetTypesFromFilter( m_wildCard, m_filterNames, m_filterExtensions, m_currentExtensions ) ;
 

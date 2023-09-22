@@ -95,7 +95,7 @@ bool GetNumericToken(size_t len,
                      wxString::const_iterator& p,
                      const wxString::const_iterator& end,
                      unsigned long *number,
-                     size_t *numScannedDigits = NULL)
+                     size_t *numScannedDigits = nullptr)
 {
     size_t n = 1;
     wxString s;
@@ -316,17 +316,19 @@ ParseFormatAt(wxString::const_iterator& p,
 wxString wxDateTime::Format(const wxString& formatp, const TimeZone& tz) const
 {
     wxCHECK_MSG( !formatp.empty(), wxEmptyString,
-                 wxT("NULL format in wxDateTime::Format") );
+                 wxT("null format in wxDateTime::Format") );
 
     wxString format = formatp;
 #ifdef __WXOSX__
+#if wxUSE_INTL
     if ( format.Contains("%c") )
         format.Replace("%c", wxUILocale::GetCurrent().GetInfo(wxLOCALE_DATE_TIME_FMT));
     if ( format.Contains("%x") )
         format.Replace("%x", wxUILocale::GetCurrent().GetInfo(wxLOCALE_SHORT_DATE_FMT));
     if ( format.Contains("%X") )
         format.Replace("%X", wxUILocale::GetCurrent().GetInfo(wxLOCALE_TIME_FMT));
-#endif
+#endif // wxUSE_INTL
+#endif // __WXOSX__
     // we have to use our own implementation if the date is out of range of
     // strftime()
 #ifdef wxHAS_STRFTIME
@@ -863,7 +865,7 @@ wxDateTime::ParseRfc822Date(const wxString& originalDate, wxString::const_iterat
     // 1. week day (optional)
     // if there is a week day present, it must be separated
     // by a comma at position [3].
-    if ( date.Length() > 3 && date[3] == ',' )
+    if ( date.length() > 3 && date[3] == ',' )
     {
         const wxDateTime::WeekDay
             wd = GetWeekDayFromName(p, pEnd, Name_Abbr, DateLang_English);
@@ -1014,7 +1016,7 @@ const char* wxDateTime::ParseRfc822Date(const char* date)
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseRfc822Date(dateStr, &end) )
-        return NULL;
+        return nullptr;
 
     return date + dateStr.IterOffsetInMBStr(end);
 }
@@ -1024,7 +1026,7 @@ const wchar_t* wxDateTime::ParseRfc822Date(const wchar_t* date)
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseRfc822Date(dateStr, &end) )
-        return NULL;
+        return nullptr;
 
     return date + (end - dateStr.begin());
 }
@@ -1528,9 +1530,7 @@ wxDateTime::ParseFormat(const wxString& date,
                     else if
                     (
                         *input == wxS('-')
-#if wxUSE_UNICODE
                         || *input == wxString::FromUTF8("\xe2\x88\x92")
-#endif
                     )
                         minusFound = true;
                     else
@@ -1715,7 +1715,7 @@ wxDateTime::ParseFormat(const char* date,
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseFormat(dateStr, format, dateDef, &end) )
-        return NULL;
+        return nullptr;
 
     return date + dateStr.IterOffsetInMBStr(end);
 }
@@ -1728,7 +1728,7 @@ wxDateTime::ParseFormat(const wchar_t* date,
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseFormat(dateStr, format, dateDef, &end) )
-        return NULL;
+        return nullptr;
 
     return date + (end - dateStr.begin());
 }
@@ -1753,6 +1753,10 @@ wxDateTime::ParseDateTime(const wxString& date, wxString::const_iterator *end)
     {
         // Skip spaces, as the ParseTime() function fails on spaces
         while ( endDate != date.end() && wxIsspace(*endDate) )
+            ++endDate;
+
+        // Skip possible 'T' separator in front of time component
+        if ( endDate != date.end() && *endDate == 'T' )
             ++endDate;
 
         const wxString timestr(endDate, date.end());
@@ -1804,7 +1808,7 @@ const char* wxDateTime::ParseDateTime(const char* date)
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseDateTime(dateStr, &end) )
-        return NULL;
+        return nullptr;
 
     return date + dateStr.IterOffsetInMBStr(end);
 }
@@ -1814,7 +1818,7 @@ const wchar_t* wxDateTime::ParseDateTime(const wchar_t* date)
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseDateTime(dateStr, &end) )
-        return NULL;
+        return nullptr;
 
     return date + (end - dateStr.begin());
 }
@@ -2188,7 +2192,7 @@ const char* wxDateTime::ParseDate(const char* date)
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseDate(dateStr, &end) )
-        return NULL;
+        return nullptr;
 
     return date + dateStr.IterOffsetInMBStr(end);
 }
@@ -2198,7 +2202,7 @@ const wchar_t* wxDateTime::ParseDate(const wchar_t* date)
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseDate(dateStr, &end) )
-        return NULL;
+        return nullptr;
 
     return date + (end - dateStr.begin());
 }
@@ -2264,7 +2268,7 @@ const char* wxDateTime::ParseTime(const char* date)
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseTime(dateStr, &end) )
-        return NULL;
+        return nullptr;
 
     return date + dateStr.IterOffsetInMBStr(end);
 }
@@ -2274,7 +2278,7 @@ const wchar_t* wxDateTime::ParseTime(const wchar_t* date)
     wxString::const_iterator end;
     wxString dateStr(date);
     if ( !ParseTime(dateStr, &end) )
-        return NULL;
+        return nullptr;
 
     return date + (end - dateStr.begin());
 }
@@ -2350,7 +2354,7 @@ wxString wxTimeSpan::Format(const wxString& format) const
     }
 
     wxCHECK_MSG( !format.empty(), str,
-                 wxT("NULL format in wxTimeSpan::Format") );
+                 wxT("null format in wxTimeSpan::Format") );
 
     str.Alloc(format.length());
 

@@ -30,6 +30,10 @@
 
 #include "wx/fdrepdlg.h"
 
+// Use functions from src/msw/window.cpp
+extern void wxRemoveHandleAssociation(wxWindowMSW *win);
+extern void wxAssociateWinWithHandle(HWND hWnd, wxWindowMSW *win);
+
 // ----------------------------------------------------------------------------
 // functions prototypes
 // ----------------------------------------------------------------------------
@@ -292,8 +296,8 @@ wxFindReplaceDialogHookProc(HWND hwnd,
 
 void wxFindReplaceDialog::Init()
 {
-    m_impl = NULL;
-    m_FindReplaceData = NULL;
+    m_impl = nullptr;
+    m_FindReplaceData = nullptr;
 
     // as we're created in the hidden state, bring the internal flag in sync
     m_isShown = false;
@@ -334,7 +338,8 @@ wxFindReplaceDialog::~wxFindReplaceDialog()
     m_isShown = false;
 
     // and from destroying our window [again]
-    m_hWnd = (WXHWND)NULL;
+    wxRemoveHandleAssociation(this);
+    m_hWnd = (WXHWND)nullptr;
 }
 
 bool wxFindReplaceDialog::Create(wxWindow *parent,
@@ -351,7 +356,7 @@ bool wxFindReplaceDialog::Create(wxWindow *parent,
     SetTitle(title);
 
     // we must have a parent as it will get the messages from us
-    return parent != NULL;
+    return parent != nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -419,6 +424,7 @@ bool wxFindReplaceDialog::Show(bool show)
     }
 
     m_hWnd = (WXHWND)hwnd;
+    wxAssociateWinWithHandle(m_hWnd, this);
 
     return true;
 }
@@ -438,6 +444,19 @@ void wxFindReplaceDialog::SetTitle( const wxString& title)
 wxString wxFindReplaceDialog::GetTitle() const
 {
     return m_title;
+}
+
+// ----------------------------------------------------------------------------
+// wxFindReplaceDialog message handling
+// ----------------------------------------------------------------------------
+
+bool wxFindReplaceDialog::MSWProcessMessage(WXMSG* pMsg)
+{
+    // The base class MSWProcessMessage() doesn't work for us because we don't
+    // have wxTAB_TRAVERSAL style, but then we don't need it anyhow: as this
+    // dialog only ever contains standard controls, just using the standard
+    // function is enough to make TAB navigation work in it.
+    return m_hWnd && ::IsDialogMessage(m_hWnd, pMsg);
 }
 
 // ----------------------------------------------------------------------------

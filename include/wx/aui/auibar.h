@@ -76,7 +76,7 @@ public:
         m_isDropdownClicked = false;
         m_toolId = -1;
     }
-    wxEvent *Clone() const wxOVERRIDE { return new wxAuiToolBarEvent(*this); }
+    wxEvent *Clone() const override { return new wxAuiToolBarEvent(*this); }
 
     bool IsDropDownClicked() const  { return m_isDropdownClicked; }
     void SetDropDownClicked(bool c) { m_isDropdownClicked = c;    }
@@ -98,7 +98,7 @@ private:
     int m_toolId;
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxAuiToolBarEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxAuiToolBarEvent);
 };
 
 
@@ -110,8 +110,8 @@ public:
 
     wxAuiToolBarItem()
     {
-        m_window = NULL;
-        m_sizerItem = NULL;
+        m_window = nullptr;
+        m_sizerItem = nullptr;
         m_spacerPixels = 0;
         m_toolId = 0;
         m_kind = wxITEM_NORMAL;
@@ -121,6 +121,7 @@ public:
         m_dropDown = true;
         m_sticky = true;
         m_userData = 0;
+        m_clientData = nullptr;
         m_alignment = wxALIGN_CENTER;
     }
 
@@ -144,6 +145,7 @@ public:
         m_dropDown = c.m_dropDown;
         m_sticky = c.m_sticky;
         m_userData = c.m_userData;
+        m_clientData = c.m_clientData;
         m_alignment = c.m_alignment;
     }
 
@@ -174,7 +176,7 @@ public:
     void SetDisabledBitmap(const wxBitmapBundle& bmp) { m_disabledBitmap = bmp; }
     const wxBitmapBundle& GetDisabledBitmapBundle() const { return m_disabledBitmap; }
     wxBitmap GetDisabledBitmapFor(wxWindow* wnd) const { return m_disabledBitmap.GetBitmapFor(wnd); }
-    wxBitmap GetDisabledBitmap() const { return GetBitmapFor(m_window); }
+    wxBitmap GetDisabledBitmap() const { return GetDisabledBitmapFor(m_window); }
 
     // Return the bitmap for the current state, normal or disabled.
     wxBitmap GetCurrentBitmapFor(wxWindow* wnd) const;
@@ -217,6 +219,9 @@ public:
     void SetUserData(long l) { m_userData = l; }
     long GetUserData() const { return m_userData; }
 
+    void SetClientData(wxObject* l) { m_clientData = l; }
+    wxObject* GetClientData() const { return m_clientData; }
+
     void SetAlignment(int l) { m_alignment = l; }
     int GetAlignment() const { return m_alignment; }
 
@@ -244,13 +249,12 @@ private:
     bool m_active;               // true if the item is currently active
     bool m_dropDown;             // true if the item has a dropdown button
     bool m_sticky;               // overrides button states if true (always active)
-    long m_userData;            // user-specified data
+    long m_userData;             // number associated with the item
+    wxObject* m_clientData;      // pointer to a wxObject associated with the item
     int m_alignment;             // sizer alignment flag, defaults to wxCENTER, may be wxEXPAND or any other
 };
 
-#ifndef SWIG
-WX_DECLARE_USER_EXPORTED_OBJARRAY(wxAuiToolBarItem, wxAuiToolBarItemArray, WXDLLIMPEXP_AUI);
-#endif
+using wxAuiToolBarItemArray = wxBaseObjectArray<wxAuiToolBarItem>;
 
 
 
@@ -356,80 +360,80 @@ public:
     wxAuiGenericToolBarArt();
     virtual ~wxAuiGenericToolBarArt();
 
-    virtual wxAuiToolBarArt* Clone() wxOVERRIDE;
-    virtual void SetFlags(unsigned int flags) wxOVERRIDE;
-    virtual unsigned int GetFlags() wxOVERRIDE;
-    virtual void SetFont(const wxFont& font) wxOVERRIDE;
-    virtual wxFont GetFont() wxOVERRIDE;
-    virtual void SetTextOrientation(int orientation) wxOVERRIDE;
-    virtual int GetTextOrientation() wxOVERRIDE;
+    virtual wxAuiToolBarArt* Clone() override;
+    virtual void SetFlags(unsigned int flags) override;
+    virtual unsigned int GetFlags() override;
+    virtual void SetFont(const wxFont& font) override;
+    virtual wxFont GetFont() override;
+    virtual void SetTextOrientation(int orientation) override;
+    virtual int GetTextOrientation() override;
 
     virtual void DrawBackground(
                 wxDC& dc,
                 wxWindow* wnd,
-                const wxRect& rect) wxOVERRIDE;
+                const wxRect& rect) override;
 
     virtual void DrawPlainBackground(wxDC& dc,
                                   wxWindow* wnd,
-                                  const wxRect& rect) wxOVERRIDE;
+                                  const wxRect& rect) override;
 
     virtual void DrawLabel(
                 wxDC& dc,
                 wxWindow* wnd,
                 const wxAuiToolBarItem& item,
-                const wxRect& rect) wxOVERRIDE;
+                const wxRect& rect) override;
 
     virtual void DrawButton(
                 wxDC& dc,
                 wxWindow* wnd,
                 const wxAuiToolBarItem& item,
-                const wxRect& rect) wxOVERRIDE;
+                const wxRect& rect) override;
 
     virtual void DrawDropDownButton(
                 wxDC& dc,
                 wxWindow* wnd,
                 const wxAuiToolBarItem& item,
-                const wxRect& rect) wxOVERRIDE;
+                const wxRect& rect) override;
 
     virtual void DrawControlLabel(
                 wxDC& dc,
                 wxWindow* wnd,
                 const wxAuiToolBarItem& item,
-                const wxRect& rect) wxOVERRIDE;
+                const wxRect& rect) override;
 
     virtual void DrawSeparator(
                 wxDC& dc,
                 wxWindow* wnd,
-                const wxRect& rect) wxOVERRIDE;
+                const wxRect& rect) override;
 
     virtual void DrawGripper(
                 wxDC& dc,
                 wxWindow* wnd,
-                const wxRect& rect) wxOVERRIDE;
+                const wxRect& rect) override;
 
     virtual void DrawOverflowButton(
                 wxDC& dc,
                 wxWindow* wnd,
                 const wxRect& rect,
-                int state) wxOVERRIDE;
+                int state) override;
 
     virtual wxSize GetLabelSize(
                 wxDC& dc,
                 wxWindow* wnd,
-                const wxAuiToolBarItem& item) wxOVERRIDE;
+                const wxAuiToolBarItem& item) override;
 
     virtual wxSize GetToolSize(
                 wxDC& dc,
                 wxWindow* wnd,
-                const wxAuiToolBarItem& item) wxOVERRIDE;
+                const wxAuiToolBarItem& item) override;
 
-    virtual int GetElementSize(int element) wxOVERRIDE;
-    virtual void SetElementSize(int elementId, int size) wxOVERRIDE;
+    virtual int GetElementSize(int element) override;
+    virtual void SetElementSize(int elementId, int size) override;
 
     virtual int ShowDropDown(wxWindow* wnd,
-                             const wxAuiToolBarItemArray& items) wxOVERRIDE;
+                             const wxAuiToolBarItemArray& items) override;
 
-    virtual void UpdateColoursFromSystem() wxOVERRIDE;
+    virtual void UpdateColoursFromSystem() override;
 
 protected:
 
@@ -480,12 +484,12 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = wxAUI_TB_DEFAULT_STYLE);
 
-    virtual void SetWindowStyleFlag(long style) wxOVERRIDE;
+    virtual void SetWindowStyleFlag(long style) override;
 
     void SetArtProvider(wxAuiToolBarArt* art);
     wxAuiToolBarArt* GetArtProvider() const;
 
-    bool SetFont(const wxFont& font) wxOVERRIDE;
+    bool SetFont(const wxFont& font) override;
 
 
     wxAuiToolBarItem* AddTool(int toolId,
@@ -507,7 +511,7 @@ public:
                  const wxBitmapBundle& bitmap,
                  const wxBitmapBundle& disabledBitmap,
                  bool toggle = false,
-                 wxObject* clientData = NULL,
+                 wxObject* clientData = nullptr,
                  const wxString& shortHelpString = wxEmptyString,
                  const wxString& longHelpString = wxEmptyString)
     {
@@ -559,6 +563,9 @@ public:
     void SetMargins(const wxSize& size) { SetMargins(size.x, size.x, size.y, size.y); }
     void SetMargins(int x, int y) { SetMargins(x, x, y, y); }
     void SetMargins(int left, int right, int top, int bottom);
+
+    void SetToolClientData (int tool_id, wxObject* client_data);
+    wxObject* GetToolClientData(int tool_id) const;
 
     void SetToolBitmapSize(const wxSize& size);
     wxSize GetToolBitmapSize() const;
@@ -616,7 +623,7 @@ public:
     bool IsPaneValid(const wxAuiPaneInfo& pane) const;
 
     // Override to call DoIdleUpdate().
-    virtual void UpdateWindowUI(long flags = wxUPDATE_UI_NONE) wxOVERRIDE;
+    virtual void UpdateWindowUI(long flags = wxUPDATE_UI_NONE) override;
 
 protected:
     void Init();

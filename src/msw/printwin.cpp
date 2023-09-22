@@ -79,7 +79,7 @@ wxWindowsPrinter::wxWindowsPrinter(wxPrintDialogData *data)
 bool wxWindowsPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt)
 {
     sm_abortIt = false;
-    sm_abortWindow = NULL;
+    sm_abortWindow = nullptr;
 
     if (!printout)
     {
@@ -93,7 +93,7 @@ bool wxWindowsPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt
         m_printDialogData.SetMaxPage(9999);
 
     // Create a suitable device context
-    wxPrinterDC *dc wxDUMMY_INITIALIZE(NULL);
+    wxPrinterDC *dc wxDUMMY_INITIALIZE(nullptr);
     if (prompt)
     {
         dc = wxDynamicCast(PrintDialog(parent), wxPrinterDC);
@@ -164,7 +164,12 @@ bool wxWindowsPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt
 
     int minPageNum = minPage, maxPageNum = maxPage;
 
-    if ( !(m_printDialogData.GetAllPages() || m_printDialogData.GetSelection()) )
+    if ( m_printDialogData.GetCurrentPage() || m_printDialogData.GetSelection() )
+    {
+        minPageNum = fromPage;
+        maxPageNum = toPage;
+    }
+    else if ( !m_printDialogData.GetAllPages() )
     {
         minPageNum = m_printDialogData.GetFromPage();
         maxPageNum = m_printDialogData.GetToPage();
@@ -198,6 +203,10 @@ bool wxWindowsPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt
               pn <= maxPageNum && printout->HasPage(pn);
               pn++ )
         {
+            // allow non-consecutive selected pages
+            if ( m_printDialogData.GetSelection() && !printout->IsPageSelected(pn) )
+                continue;
+
             win->SetProgress(pn - minPageNum + 1,
                              maxPageNum - minPageNum + 1,
                              copyCount, maxCopyCount);
@@ -237,7 +246,7 @@ bool wxWindowsPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt
 
 wxDC *wxWindowsPrinter::PrintDialog(wxWindow *parent)
 {
-    wxDC *dc = NULL;
+    wxDC *dc = nullptr;
 
     wxWindowsPrintDialog dialog(parent, & m_printDialogData);
     int ret = dialog.ShowModal();
@@ -246,7 +255,7 @@ wxDC *wxWindowsPrinter::PrintDialog(wxWindow *parent)
     {
         dc = dialog.GetPrintDC();
         m_printDialogData = dialog.GetPrintDialogData();
-        if (dc == NULL)
+        if (dc == nullptr)
             sm_lastError = wxPRINTER_ERROR;
         else
             sm_lastError = wxPRINTER_NO_ERROR;

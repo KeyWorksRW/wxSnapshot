@@ -25,9 +25,9 @@
     #include "wx/dialog.h"
     #include "wx/dcmemory.h"
     #include "wx/intl.h"
+    #include "wx/msgdlg.h"
     #include "wx/panel.h"
     #include "wx/textctrl.h"
-    #include "wx/valtext.h"
 #endif
 
 #include "wx/calctrl.h"
@@ -51,6 +51,69 @@
 // local classes
 // ----------------------------------------------------------------------------
 
+namespace
+{
+
+#if wxUSE_VALIDATORS
+
+class DateValidator : public wxValidator
+{
+public:
+    explicit DateValidator(const wxString& format) : m_format(format) {}
+    DateValidator(const DateValidator& val) = default;
+
+    virtual wxObject *Clone() const override
+    {
+        return new DateValidator(*this);
+    }
+
+    virtual bool Validate(wxWindow *parent) override
+    {
+        // We can only be used with wxComboCtrl, so just a static_cast<> would
+        // be safe, but use checked cast to notice any problems in debug build.
+        const wxString
+            s = wxStaticCast(m_validatorWindow, wxComboCtrl)->GetValue();
+        if ( s.empty() )
+        {
+            // There is no need to tell the user that an empty string is
+            // invalid, this shouldn't be a surprise for them.
+            return true;
+        }
+
+        wxDateTime dt;
+        if ( !dt.ParseFormat(s, m_format) )
+        {
+            wxMessageBox
+            (
+                wxString::Format
+                (
+                    _("\"%s\" is not in the expected date format, "
+                      "please enter it as e.g. \"%s\"."),
+                    s, wxDateTime::Today().Format(m_format)
+                ),
+                _("Invalid date"),
+                wxOK | wxICON_WARNING,
+                parent
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // We don't transfer any data, this validator is used only for validation.
+    virtual bool TransferFromWindow() override { return true; }
+    virtual bool TransferToWindow() override { return true; }
+
+private:
+    const wxString m_format;
+};
+
+#endif // wxUSE_VALIDATORS
+
+} // anonymous namespace
+
 class wxCalendarComboPopup : public wxCalendarCtrl,
                              public wxComboPopup
 {
@@ -61,14 +124,14 @@ public:
     {
     }
 
-    virtual void Init() wxOVERRIDE
+    virtual void Init() override
     {
     }
 
     // NB: Don't create lazily since it didn't work that way before
     //     wxComboCtrl was used, and changing behaviour would almost
     //     certainly introduce new bugs.
-    virtual bool Create(wxWindow* parent) wxOVERRIDE
+    virtual bool Create(wxWindow* parent) override
     {
         if ( !wxCalendarCtrl::Create(parent, wxID_ANY, wxDefaultDateTime,
                               wxPoint(0, 0), wxDefaultSize,
@@ -91,12 +154,12 @@ public:
 
     virtual wxSize GetAdjustedSize(int WXUNUSED(minWidth),
                                    int WXUNUSED(prefHeight),
-                                   int WXUNUSED(maxHeight)) wxOVERRIDE
+                                   int WXUNUSED(maxHeight)) override
     {
         return m_useSize;
     }
 
-    virtual wxWindow *GetControl() wxOVERRIDE { return this; }
+    virtual wxWindow *GetControl() override { return this; }
 
     void SetDateValue(const wxDateTime& date)
     {
@@ -147,10 +210,8 @@ public:
     }
 
 private:
-    bool ParseDateTime(const wxString& s, wxDateTime* pDt)
+    bool ParseDateTime(const wxString& s, wxDateTime* pDt) const
     {
-        wxASSERT(pDt);
-
         pDt->ParseFormat(s, m_format);
         if ( !pDt->IsValid() )
             return false;
@@ -260,22 +321,9 @@ private:
 
         if ( m_combo )
         {
-            wxString allowedChars = wxS("0123456789");
-
-            const wxChar *p2 = m_format.c_str();
-            while ( *p2 )
-            {
-                if ( *p2 == '%')
-                    p2 += 2;
-                else
-                    allowedChars << (*p2++); // append char
-            }
-
-    #if wxUSE_VALIDATORS
-            wxTextValidator tv(wxFILTER_INCLUDE_CHAR_LIST);
-            tv.SetCharIncludes(allowedChars);
-            m_combo->SetValidator(tv);
-    #endif
+#if wxUSE_VALIDATORS
+            m_combo->SetValidator(DateValidator(m_format));
+#endif // wxUSE_VALIDATORS
 
             if ( GetDate().IsValid() )
                 m_combo->SetText(GetDate().Format(m_format));
@@ -284,7 +332,7 @@ private:
         return true;
     }
 
-    virtual void SetStringValue(const wxString& s) wxOVERRIDE
+    virtual void SetStringValue(const wxString& s) override
     {
         wxDateTime dt;
         if ( ParseDateTime(s, &dt) )
@@ -292,7 +340,7 @@ private:
         //else: keep the old value
     }
 
-    virtual wxString GetStringValue() const wxOVERRIDE
+    virtual wxString GetStringValue() const override
     {
         return GetStringValueFor(GetDate());
     }
@@ -385,8 +433,8 @@ bool wxDatePickerCtrlGeneric::Create(wxWindow *parent,
 
 void wxDatePickerCtrlGeneric::Init()
 {
-    m_combo = NULL;
-    m_popup = NULL;
+    m_combo = nullptr;
+    m_popup = nullptr;
 }
 
 wxDatePickerCtrlGeneric::~wxDatePickerCtrlGeneric()
@@ -398,8 +446,8 @@ bool wxDatePickerCtrlGeneric::Destroy()
     if ( m_combo )
         m_combo->Destroy();
 
-    m_combo = NULL;
-    m_popup = NULL;
+    m_combo = nullptr;
+    m_popup = nullptr;
 
     return wxControl::Destroy();
 }
@@ -414,7 +462,7 @@ wxSize wxDatePickerCtrlGeneric::DoGetBestSize() const
 
     wxTextCtrl* const text = m_combo->GetTextCtrl();
     int w;
-    text->GetTextExtent(text->GetValue(), &w, NULL);
+    text->GetTextExtent(text->GetValue(), &w, nullptr);
     size.x += text->GetSizeFromTextSize(w + 1).x;
 
     return size;

@@ -16,7 +16,7 @@
 
 #include "wx/textctrl.h"
 
-#if (!defined(__WXMAC__) && !defined(__WXGTK20__)) || defined(__WXUNIVERSAL__)
+#if (!defined(__WXMAC__) && !defined(__WXGTK__)) || defined(__WXUNIVERSAL__)
     // no native version, use the generic one
     #define wxUSE_NATIVE_SEARCH_CONTROL 0
 
@@ -25,15 +25,21 @@
 
     class WXDLLIMPEXP_CORE wxSearchCtrlBaseBaseClass
         : public wxCompositeWindow< wxNavigationEnabled<wxControl> >,
-          public wxTextCtrlIface
+          public wxTextEntry
     {
+#if defined(__WXMSW__) && !defined(__WXUNIVERSAL__)
+    private:
+        // implement this to return the HWND of the EDIT control
+        // can return nullptr here as this TextEntry is just a proxy
+        virtual WXHWND GetEditHWND() const override  { wxFAIL_MSG("unreachable"); return nullptr; }
+#endif
     };
 #elif defined(__WXMAC__)
     // search control was introduced in Mac OS X 10.3 Panther
     #define wxUSE_NATIVE_SEARCH_CONTROL 1
 
     #define wxSearchCtrlBaseBaseClass wxTextCtrl
-#elif defined(__WXGTK20__)
+#elif defined(__WXGTK__)
     // Use GtkSearchEntry if available, construct a similar one using GtkEntry
     // otherwise.
     #define wxUSE_NATIVE_SEARCH_CONTROL 1
@@ -83,12 +89,12 @@ public:
     virtual wxString GetDescriptiveText() const = 0;
 
 #if wxUSE_NATIVE_SEARCH_CONTROL
-    virtual const wxTextEntry* WXGetTextEntry() const wxOVERRIDE { return this; }
+    virtual const wxTextEntry* WXGetTextEntry() const override { return this; }
 #endif // wxUSE_NATIVE_SEARCH_CONTROL
 
 private:
     // implement wxTextEntry pure virtual method
-    virtual wxWindow *GetEditableWindow() wxOVERRIDE { return this; }
+    virtual wxWindow *GetEditableWindow() override { return this; }
 };
 
 

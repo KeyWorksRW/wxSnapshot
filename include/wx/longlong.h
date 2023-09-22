@@ -326,7 +326,7 @@ public:
 #if wxUSE_STD_IOSTREAM
         // input/output
     friend WXDLLIMPEXP_BASE
-    wxSTD ostream& operator<<(wxSTD ostream&, const wxLongLongNative&);
+    std::ostream& operator<<(std::ostream&, const wxLongLongNative&);
 #endif
 
     friend WXDLLIMPEXP_BASE
@@ -545,7 +545,7 @@ public:
 #if wxUSE_STD_IOSTREAM
         // input/output
     friend WXDLLIMPEXP_BASE
-    wxSTD ostream& operator<<(wxSTD ostream&, const wxULongLongNative&);
+    std::ostream& operator<<(std::ostream&, const wxULongLongNative&);
 #endif
 
     friend WXDLLIMPEXP_BASE
@@ -785,7 +785,7 @@ public:
 
 #if wxUSE_STD_IOSTREAM
     friend WXDLLIMPEXP_BASE
-    wxSTD ostream& operator<<(wxSTD ostream&, const wxLongLongWx&);
+    std::ostream& operator<<(std::ostream&, const wxLongLongWx&);
 #endif // wxUSE_STD_IOSTREAM
 
     friend WXDLLIMPEXP_BASE
@@ -1001,7 +1001,7 @@ public:
 
 #if wxUSE_STD_IOSTREAM
     friend WXDLLIMPEXP_BASE
-    wxSTD ostream& operator<<(wxSTD ostream&, const wxULongLongWx&);
+    std::ostream& operator<<(std::ostream&, const wxULongLongWx&);
 #endif // wxUSE_STD_IOSTREAM
 
     friend WXDLLIMPEXP_BASE
@@ -1110,6 +1110,12 @@ namespace std
 // dependencies we can only do it here (or add another header just for this but
 // it doesn't seem necessary).
 #include "wx/strvararg.h"
+
+template<>
+struct wxFormatStringSpecifier<wxLongLong>
+{
+    enum { value = wxFormatString::Arg_LongLongInt };
+};
 
 template<>
 struct WXDLLIMPEXP_BASE wxArgNormalizer<wxLongLong>
