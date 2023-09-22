@@ -1,13 +1,21 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(wxWidgets LANGUAGES CXX C)
+project(wxWidgets 
+    LANGUAGES
+    CXX C
+    VERSION 3.3.0.0
+    DESCRIPTION "wxWidgets 3.3.0"  # see ../include/wx/version.h
+    HOMEPAGE_URL "https://github.com/wxWidgets/wxWidgets"
+)
 
 ####################### Options #######################
 
-option(BUILD_SHARED_LIBS "Build with wxWidgets shared libraries" OFF)
+option(BUILD_SHARED_LIBS "Build wxWidgets shared libraries" OFF)
 
 if (BUILD_SHARED_LIBS)
-    message(NOTICE "Building with wxWidgets shared libraries")
+    message(NOTICE "Building wxWidgets shared libraries")
+else()
+    message(NOTICE "Building wxWidgets static libraries")
 endif()
 
 ####################### Check for Multi-Config Generator #######################
@@ -29,24 +37,24 @@ endif()
 
 ####################### General Settings #######################
 
-set(CMAKE_CXX_STANDARD 17) # future-proofing, wxWidgets 3.3 requires C++11, 3.4 will require C++14, etc.
+set(CMAKE_CXX_STANDARD 17)  # Note that official build is using C++11
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (MSVC)
     # /O1 often results in faster code than /O2 due to CPU caching
-    string(REPLACE "/O2" "/O1" cl_optimize "${CMAKE_CXX_FLAGS_RELEASE}")
+    string(REPLACE "/O2" "/O1" cl_optimize ${CMAKE_CXX_FLAGS_RELEASE})
     set(CMAKE_CXX_FLAGS_RELEASE ${cl_optimize} CACHE STRING "C++ Release flags" FORCE)
 
-    string(REPLACE "/O2" "/O1" cl_optimize "${CMAKE_C_FLAGS_RELEASE}")
+    string(REPLACE "/O2" "/O1" cl_optimize ${CMAKE_C_FLAGS_RELEASE})
     set(CMAKE_C_FLAGS_RELEASE ${cl_optimize} CACHE STRING "C Release flags" FORCE)
 
     # Using /Z7 instead of /Zi to avoid blocking while parallel compilers write to the pdb file.
     # This can considerably speed up build times at the cost of larger object files.
-    string(REPLACE "/Zi" "/Z7" z_seven "${CMAKE_CXX_FLAGS_DEBUG}")
+    string(REPLACE "/Zi" "/Z7" z_seven ${CMAKE_CXX_FLAGS_DEBUG})
     set(CMAKE_CXX_FLAGS_DEBUG ${z_seven} CACHE STRING "C++ Debug flags" FORCE)
 
-    string(REPLACE "/Zi" "/Z7" z_seven "${CMAKE_C_FLAGS_DEBUG}")
+    string(REPLACE "/Zi" "/Z7" z_seven ${CMAKE_C_FLAGS_DEBUG})
     set(CMAKE_C_FLAGS_DEBUG ${z_seven} CACHE STRING "C Debug flags" FORCE)
 
     # Use static runtime for Release builds to run with Wine without needing to install the dlls
@@ -56,17 +64,17 @@ if (MSVC)
 else()
     # This should work for gcc and clang (including xcode which is based on clang)
     # -O2 can result in faster code than -O3 due to CPU caching.
-    string(REPLACE "-O3" "-O2" cl_optimize "${CMAKE_CXX_FLAGS_RELEASE}")
+    string(REPLACE "-O3" "-O2" cl_optimize ${CMAKE_CXX_FLAGS_RELEASE})
     set(CMAKE_CXX_FLAGS_RELEASE ${cl_optimize} CACHE STRING "C++ Release flags" FORCE)
-    string(REPLACE "-O3" "-O2" cl_optimize "${CMAKE_C_FLAGS_RELEASE}")
+    string(REPLACE "-O3" "-O2" cl_optimize ${CMAKE_C_FLAGS_RELEASE})
     set(CMAKE_C_FLAGS_RELEASE ${cl_optimize} CACHE STRING "C Release flags" FORCE)
 endif()
 
-include(src/wxWidgets.cmake) # This will set ${common_sources}, ${msw_sources}, ${unix_sources} and ${osx_sources}
-include(src/wxCLib.cmake)    # This will set ${wxCLib_sources} with list of files
+include( wxWidgets.cmake )  # This will set ${common_sources}, ${msw_sources}, ${unix_sources} and ${osx_sources}
+include( wxCLib.cmake )     # This will set ${wxCLib_sources} with list of files
 
 if (WIN32)
-    add_library(wxWidgets ${common_sources} ${msw_sources})
+    add_library(wxWidgets ${common_sources} ${msw_sources} )
 elseif (APPLE)
     add_library(wxWidgets ${common_sources} ${osx_sources} )
 elseif (UNIX)
@@ -74,6 +82,10 @@ elseif (UNIX)
 endif()
 
 add_library(wxCLib STATIC ${wxCLib_sources} )
+
+if (BUILD_SHARED_LIBS)
+    target_compile_definitions(wxWidgets PRIVATE WXMAKINGDLL)
+endif()
 
 if (MSVC)
     # /GL -- combined with the Linker flag /LTCG allows whole program optimization in Release build
@@ -87,16 +99,11 @@ if (WIN32)
     )
 endif()
 
-if (BUILD_SHARED_LIBS)
-    target_compile_definitions(wxWidgets PRIVATE WXMAKINGDLL)
-endif()
-
 target_compile_definitions(wxWidgets PRIVATE
     WXBUILDING
     _CRT_SECURE_NO_DEPRECATE=1
     _CRT_NON_CONFORMING_SWPRINTFS=1
     _SCL_SECURE_NO_WARNINGS=1
-    wxUSE_UNICODE=1
     SCI_LEXER
     NO_CXX11_REGEX
     LINK_LEXERS
@@ -114,8 +121,8 @@ if (WIN32)
         MAX_NAME_COUNT=10000
         MAX_NAME_SIZE=32
     )
-    else()
-        target_compile_definitions(wxCLib PRIVATE
+else()
+    target_compile_definitions(wxCLib PRIVATE
         PCRE2_CODE_UNIT_WIDTH=8
         NEWLINE_DEFAULT=2
         LINK_SIZE=2
@@ -139,15 +146,16 @@ target_include_directories(wxWidgets PRIVATE
     ${setup_dir}
     src/tiff/libtiff
     src/jpeg
-    src/pcre/wx
     src/png
     src/zlib
-    src/regex
+    3rdparty/pcre/src/wx
     src/expat/expat/lib
 
     # Needed for the wx_stc library
     src/stc/scintilla/include
-    src/stc/scintilla/lexlib
+    src/stc/lexilla/include
+    src/stc/lexilla/access
+    src/stc/lexilla/lexlib
     src/stc/scintilla/src
 )
 
@@ -156,8 +164,8 @@ target_include_directories(wxCLib PRIVATE
     ${setup_dir}
     src/tiff/libtiff
     src/jpeg
-    src/pcre/wx
     src/zlib
+    3rdparty/pcre/src/wx
     src/expat/expat/lib
 )
 

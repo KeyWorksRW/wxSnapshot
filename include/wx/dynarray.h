@@ -15,6 +15,8 @@
 
 #include "wx/vector.h"
 
+#include <initializer_list>
+
 /*
   This header defines legacy dynamic arrays and object arrays (i.e. arrays
   which own their elements) classes.
@@ -105,14 +107,16 @@ public:
         : base_vec(first, last)
     { }
 
+    template<typename U>
+    wxBaseArray(std::initializer_list<U> list) : base_vec(list.begin(), list.end()) {}
+
+    wxBaseArray(const std::vector<T>& vec) : base_vec(vec) { }
+    wxBaseArray(std::vector<T>&& vec) : base_vec(std::move(vec)) { }
+
     void Empty() { this->clear(); }
     void Clear() { this->clear(); }
     void Alloc(size_t uiSize) { this->reserve(uiSize); }
-
-    void Shrink()
-    {
-        wxShrinkToFit(*this);
-    }
+    void Shrink() { this->shrink_to_fit(); }
 
     size_t GetCount() const { return this->size(); }
     void SetCount(size_t n, T v = T()) { this->resize(n, v); }
@@ -256,7 +260,7 @@ public:
     }
 
 protected:
-    SCMPFUNC GetCompareFunction() const wxNOEXCEPT { return m_fnCompare; }
+    SCMPFUNC GetCompareFunction() const noexcept { return m_fnCompare; }
 
 private:
     SCMPFUNC m_fnCompare;
@@ -267,12 +271,25 @@ private:
 // _WX_DECLARE_OBJARRAY: an array for pointers to type T with owning semantics
 // ----------------------------------------------------------------------------
 
+// Trivial default implementation of the traits used by wxBaseObjectArray.
+// It can only be used if the class T is complete.
+template <typename T>
+class wxDefaultBaseObjectArrayTraits
+{
+public:
+    static T* Clone(const T& value) { return new T{value}; }
+    static void Free(T* p) { delete p; }
+};
+
 // This class must be able to be declared with incomplete types, so it doesn't
 // actually use type T in its definition, and relies on a helper template
 // parameter, which is declared by WX_DECLARE_OBJARRAY() and defined by
 // WX_DEFINE_OBJARRAY(), for providing a way to create and destroy objects of
 // type T
-template <typename T, typename Traits>
+//
+// If the class T happens to be complete, Traits can be left unspecified and a
+// trivial implementation using copy ctor directly is used.
+template <typename T, typename Traits = wxDefaultBaseObjectArrayTraits<T>>
 class wxBaseObjectArray : private wxBaseArray<T*>
 {
     typedef wxBaseArray<T*> base;
@@ -364,7 +381,7 @@ public:
         T* const pItem = Traits::Clone(item);
 
         const size_t nOldSize = size();
-        if ( pItem != NULL )
+        if ( pItem != nullptr )
             base::insert(this->end(), nInsert, pItem);
 
         for ( size_t i = 1; i < nInsert; i++ )
@@ -385,7 +402,7 @@ public:
             return;
 
         T* const pItem = Traits::Clone(item);
-        if ( pItem != NULL )
+        if ( pItem != nullptr )
             base::insert(this->begin() + uiIndex, nInsert, pItem);
 
         for ( size_t i = 1; i < nInsert; ++i )
@@ -519,6 +536,8 @@ private:
         name(size_t n, Base::const_reference v) : Base(n, v) { }              \
         template <class InputIterator>                                        \
         name(InputIterator first, InputIterator last) : Base(first, last) { } \
+        template<typename U>                                                  \
+        name(std::initializer_list<U> list) : Base(list.begin(), list.end()) { } \
     }
 
 

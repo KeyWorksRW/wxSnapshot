@@ -25,7 +25,6 @@
 
 #ifndef WX_PRECOMP
     #include "wx/string.h"
-    #include "wx/hashmap.h"
     #include "wx/log.h"
     #include "wx/window.h"
 #endif
@@ -34,6 +33,8 @@
 
 #include "wx/msw/private.h"
 #include "wx/msw/private/paint.h"
+
+#include <unordered_map>
 
 // ----------------------------------------------------------------------------
 // local data structures
@@ -128,9 +129,7 @@ private:
 // all of them because we can't call BeginPaint() more than once. So we cache
 // the first HDC created for the window in this map and then reuse it later if
 // needed. And, of course, remove it from the map when the painting is done.
-WX_DECLARE_HASH_MAP(wxWindow *, wxPaintDCInfo *,
-                    wxPointerHash, wxPointerEqual,
-                    PaintDCInfos);
+using PaintDCInfos = std::unordered_map<wxWindow*, wxPaintDCInfo*>;
 
 PaintDCInfos gs_PaintDCInfos;
 
@@ -253,7 +252,7 @@ wxPaintDCImpl::wxPaintDCImpl( wxDC *owner ) :
 wxPaintDCImpl::wxPaintDCImpl( wxDC *owner, wxWindow *window ) :
    wxClientDCImpl( owner )
 {
-    wxCHECK_RET( window, wxT("NULL canvas in wxPaintDCImpl ctor") );
+    wxCHECK_RET( window, wxT("null canvas in wxPaintDCImpl ctor") );
 
     using namespace wxMSWImpl;
     wxCHECK_RET( !paintStack.empty(),
@@ -275,7 +274,7 @@ wxPaintDCImpl::wxPaintDCImpl( wxDC *owner, wxWindow *window ) :
         m_hDC = info->GetHDC();
     }
 
-    // Note: at this point m_hDC can be NULL under MicroWindows, when dragging.
+    // Note: at this point m_hDC can be null under MicroWindows, when dragging.
     if (!GetHDC())
         return;
 
@@ -302,7 +301,7 @@ wxPaintDCInfo *wxPaintDCImpl::FindInCache(wxWindow *win)
 {
     PaintDCInfos::const_iterator it = gs_PaintDCInfos.find( win );
 
-    return it != gs_PaintDCInfos.end() ? it->second : NULL;
+    return it != gs_PaintDCInfos.end() ? it->second : nullptr;
 }
 
 /* static */

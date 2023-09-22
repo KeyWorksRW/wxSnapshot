@@ -12,6 +12,7 @@
 #define _WX_MODULE_H_
 
 #include "wx/object.h"
+#include "wx/string.h"
 #include "wx/vector.h"
 
 class wxModule;
@@ -64,7 +65,7 @@ protected:
     // after that
     void AddDependency(wxClassInfo *dep)
     {
-        wxCHECK_RET( dep, wxT("NULL module dependency") );
+        wxCHECK_RET( dep, wxT("null module dependency") );
 
         m_dependencies.push_back(dep);
     }
