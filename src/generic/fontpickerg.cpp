@@ -28,6 +28,10 @@
 
 #include "wx/fontpicker.h"
 
+#if defined(__WXGTK__)
+    #include "wx/generic/fontpickerg.h"
+#endif
+
 #include "wx/fontdlg.h"
 
 
