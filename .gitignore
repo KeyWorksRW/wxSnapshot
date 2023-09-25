@@ -4,6 +4,7 @@ setup.h
 *.ttBld
 
 build/
+buildgtk/
 
 # /include/
 include/Makefile.in
