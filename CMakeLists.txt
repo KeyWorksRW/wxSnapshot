@@ -74,6 +74,11 @@ include( wxWidgets.cmake )  # This will set ${common_sources}, ${msw_sources}, $
 include( wxCLib.cmake )     # This will set ${wxCLib_sources} with list of files
 
 if (WIN32)
+    list(APPEND wxCLib_sources src/tiff/libtiff/tif_win32.c)
+endif()
+
+
+if (WIN32)
     add_library(wxWidgets ${common_sources} ${msw_sources} )
 elseif (APPLE)
     add_library(wxWidgets ${common_sources} ${osx_sources} )
@@ -81,7 +86,9 @@ elseif (UNIX)
     add_library(wxWidgets ${common_sources} ${unix_sources} )
 endif()
 
-add_library(wxCLib STATIC ${wxCLib_sources} )
+add_library(wxCLib STATIC 
+    ${wxCLib_sources}
+)
 
 if (BUILD_SHARED_LIBS)
     target_compile_definitions(wxWidgets PRIVATE WXMAKINGDLL)
