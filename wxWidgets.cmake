@@ -797,7 +797,7 @@ set (msw_sources
 )
 
 set (unix_sources
-    src/aui/tabartgtk.cpp
+    # src/aui/tabartgtk.cpp
     src/common/fdiodispatcher.cpp
     src/common/selectdispatcher.cpp
     src/common/socketiohandler.cpp
@@ -806,7 +806,7 @@ set (unix_sources
     src/generic/activityindicator.cpp
     src/generic/caret.cpp
     src/generic/clrpickerg.cpp
-    src/generic/collpaneg.cpp
+    # src/generic/collpaneg.cpp
     src/generic/colrdlgg.cpp
     src/generic/dirdlgg.cpp
     src/generic/fdrepdlg.cpp
@@ -874,41 +874,9 @@ set (unix_sources
     src/gtk/textentry.cpp
     src/gtk/tglbtn.cpp
     src/gtk/toolbar.cpp
-    src/gtk/webview_webkit.cpp
-    src/gtk/webview_webkit2.cpp
-    src/gtk/webview_webkit2_extension.cpp
-    src/gtk1/bmpbuttn.cpp
-    src/gtk1/button.cpp
-    src/gtk1/checkbox.cpp
-    src/gtk1/checklst.cpp
-    src/gtk1/choice.cpp
-    src/gtk1/combobox.cpp
-    src/gtk1/control.cpp
-    src/gtk1/dialog.cpp
-    src/gtk1/filedlg.cpp
-    src/gtk1/fontdlg.cpp
-    src/gtk1/frame.cpp
-    src/gtk1/gauge.cpp
-    src/gtk1/listbox.cpp
-    src/gtk1/mdi.cpp
-    src/gtk1/menu.cpp
-    src/gtk1/mnemonics.cpp
-    src/gtk1/notebook.cpp
-    src/gtk1/radiobox.cpp
-    src/gtk1/radiobut.cpp
-    src/gtk1/scrolbar.cpp
-    src/gtk1/scrolwin.cpp
-    src/gtk1/slider.cpp
-    src/gtk1/spinbutt.cpp
-    src/gtk1/spinctrl.cpp
-    src/gtk1/statbmp.cpp
-    src/gtk1/statbox.cpp
-    src/gtk1/statline.cpp
-    src/gtk1/stattext.cpp
-    src/gtk1/taskbar.cpp
-    src/gtk1/textctrl.cpp
-    src/gtk1/tglbtn.cpp
-    src/gtk1/toolbar.cpp
+    # src/gtk/webview_webkit.cpp
+    # src/gtk/webview_webkit2.cpp
+    # src/gtk/webview_webkit2_extension.cpp
     src/unix/apptraits.cpp
     src/unix/appunix.cpp
     src/unix/dir.cpp

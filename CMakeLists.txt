@@ -97,6 +97,11 @@ if (WIN32)
         __WXMSW__
         WIN32
     )
+elseif (UNIX)
+    target_compile_definitions(wxWidgets PRIVATE
+        __WXGTK3__
+        __UNIX__
+    )
 endif()
 
 target_compile_definitions(wxWidgets PRIVATE
@@ -139,6 +144,8 @@ target_precompile_headers(wxWidgets PRIVATE "include/wx/wxprec.h")
 
 if (WIN32)
     set(setup_dir win)
+elseif (UNIX)
+    set(setup_dir unix)
 endif()
 
 target_include_directories(wxWidgets PRIVATE
