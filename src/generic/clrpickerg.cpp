@@ -26,6 +26,10 @@
 #include "wx/colordlg.h"
 #include "wx/dcmemory.h"
 
+#if defined(__WXGTK__)
+    #include "wx/generic/clrpickerg.h"
+#endif
+
 namespace // anonymous namespace
 {
 const wxSize defaultBitmapSize(60, 13);

@@ -84,7 +84,7 @@ set (wxCLib_sources
     src/tiff/libtiff/tif_version.c
     src/tiff/libtiff/tif_warning.c
     src/tiff/libtiff/tif_webp.c
-    src/tiff/libtiff/tif_win32.c
+    # src/tiff/libtiff/tif_win32.c
     src/tiff/libtiff/tif_write.c
     src/tiff/libtiff/tif_zip.c
     src/tiff/libtiff/tif_zstd.c
