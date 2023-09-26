@@ -1,10 +1,9 @@
 setup.h
 
-# Ignore temporary ttBld CMakeLists.ttBld files
-*.ttBld
-
 build/
 buildgtk/
+
+*.bak
 
 # /include/
 include/Makefile.in
