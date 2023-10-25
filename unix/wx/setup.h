@@ -376,7 +376,7 @@
 // Default is 1
 //
 // Recommended setting: 1 (but may be safely disabled if you don't use it)
-#define wxUSE_SECRETSTORE   1
+#define wxUSE_SECRETSTORE   0
 
 // Allow the use of the OS built-in spell checker in wxTextCtrl.
 //
@@ -1126,7 +1126,7 @@
 //
 // Recommended setting: 1 (but can be safely disabled if you don't use it and
 // want to avoid extra dependencies under Linux, for example).
-#define wxUSE_PRIVATE_FONTS 1
+#define wxUSE_PRIVATE_FONTS 0
 
 // wxRichToolTip is a customizable tooltip class which has more functionality
 // than the stock (but native, unlike this class) wxToolTip.
