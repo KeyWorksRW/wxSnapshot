@@ -354,6 +354,7 @@ set (common_sources
     src/propgrid/props.cpp
     src/ribbon/art_aui.cpp
     src/ribbon/art_internal.cpp
+    src/ribbon/art_msw.cpp
     src/ribbon/bar.cpp
     src/ribbon/buttonbar.cpp
     src/ribbon/control.cpp
@@ -793,7 +794,6 @@ set (msw_sources
     src/msw/webview_edge.cpp
     src/msw/webview_ie.cpp
     src/msw/window.cpp
-    src/ribbon/art_msw.cpp
 )
 
 set (unix_sources
@@ -814,10 +814,53 @@ set (unix_sources
     src/generic/filepickerg.cpp
     src/generic/fontdlgg.cpp
     src/generic/fontpickerg.cpp
+    src/generic/icon.cpp
     src/generic/imaglist.cpp
     src/generic/listctrl.cpp
+    src/generic/paletteg.cpp
     src/generic/prntdlgg.cpp
     src/generic/statusbr.cpp
+
+    src/gtk/app.cpp
+    src/gtk/assertdlg_gtk.cpp
+    src/gtk/bitmap.cpp
+    src/gtk/brush.cpp
+    src/gtk/clipbrd.cpp
+    src/gtk/colour.cpp
+    src/gtk/cursor.cpp
+    src/gtk/dataobj.cpp
+    src/gtk/dc.cpp
+    src/gtk/display.cpp
+    src/gtk/dnd.cpp
+    src/gtk/evtloop.cpp
+    src/gtk/filectrl.cpp
+    src/gtk/filehistory.cpp
+    src/gtk/font.cpp
+    src/gtk/image_gtk.cpp
+    src/gtk/sockgtk.cpp
+    src/gtk/mimetype.cpp
+    src/gtk/minifram.cpp
+    src/gtk/nonownedwnd.cpp
+    src/gtk/overlay.cpp
+    src/gtk/pen.cpp
+    src/gtk/popupwin.cpp
+    src/gtk/private.cpp
+    src/gtk/region.cpp
+    src/gtk/renderer.cpp
+    src/gtk/settings.cpp
+    src/gtk/textmeasure.cpp
+    src/gtk/timer.cpp
+    src/gtk/tooltip.cpp
+    src/gtk/toplevel.cpp
+    src/gtk/utilsgtk.cpp
+    src/gtk/win_gtk.cpp
+    src/gtk/window.cpp
+
+    # GTK2_LOWLEVEL_SRC
+    # src/gtk/dcclient.cpp
+    # src/gtk/dcmemory.cpp
+    # src/gtk/dcscreen.cpp
+
     src/gtk/aboutdlg.cpp
     src/gtk/activityindicator.cpp
     src/gtk/animate.cpp
@@ -877,6 +920,7 @@ set (unix_sources
     # src/gtk/webview_webkit.cpp
     # src/gtk/webview_webkit2.cpp
     # src/gtk/webview_webkit2_extension.cpp
+
     src/unix/apptraits.cpp
     src/unix/appunix.cpp
     src/unix/dir.cpp
@@ -891,13 +935,16 @@ set (unix_sources
     src/unix/glx11.cpp
     src/unix/mediactrl.cpp
     src/unix/mediactrl_gstplayer.cpp
+    src/unix/mimetype.cpp
     src/unix/snglinst.cpp
     src/unix/sockunix.cpp
     src/unix/sound_sdl.cpp
     src/unix/stackwalk.cpp
+    src/unix/stdpaths.cpp
     src/unix/threadpsx.cpp
     src/unix/timerunx.cpp
     src/unix/utilsunx.cpp
+    src/unix/utilsx11.cpp
     src/unix/wakeuppipe.cpp
 )
 
