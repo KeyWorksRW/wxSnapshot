@@ -109,6 +109,9 @@ endif()
 if (MSVC)
     # /GL -- combined with the Linker flag /LTCG allows whole program optimization in Release build
     target_compile_options(wxWidgets33 PRIVATE "$<$<CONFIG:Release>:/GL>")
+elseif(UNIX)
+    target_compile_options(wxWidgets33 PRIVATE "-fPIC")
+    target_compile_options(wxCLib PRIVATE "-fPIC")
 endif()
 
 if (WIN32)
