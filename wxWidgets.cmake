@@ -920,6 +920,7 @@ set (unix_sources
     # src/gtk/webview_webkit.cpp
     # src/gtk/webview_webkit2.cpp
     # src/gtk/webview_webkit2_extension.cpp
+    src/gtk/treeentry_gtk.c
 
     src/unix/apptraits.cpp
     src/unix/appunix.cpp
