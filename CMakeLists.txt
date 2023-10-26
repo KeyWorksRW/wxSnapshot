@@ -86,8 +86,20 @@ elseif (UNIX)
     add_library(wxWidgets33 ${common_sources} ${unix_sources} )
 endif()
 
+if (UNIX)
+    set (wxCLib_platform_files 
+        # src/gtk/treeentry_gtk.c
+        src/tiff/libtiff/tif_unix.c
+        src/tiff/libtiff/libtiff.def
+    )
+else()
+    set (wxCLib_platform_files src/tiff/libtiff/tif_win32.c)
+    # set (wxCLib_platform_files "")
+endif()
+
 add_library(wxCLib STATIC 
     ${wxCLib_sources}
+    ${wxCLib_platform_files}
 )
 
 if (BUILD_SHARED_LIBS)
