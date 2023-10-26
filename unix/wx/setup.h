@@ -229,7 +229,7 @@
 // Default is 1
 //
 // Recommended setting: 0 unless you do plan to develop MT applications
-#define wxUSE_THREADS 1
+#define wxUSE_THREADS 0
 
 // If enabled, compiles wxWidgets streams classes
 //
@@ -277,7 +277,7 @@
 //
 // Default is 1.
 //
-// Recommended setting: 1, there should be no reason to disable it.
+// Recommended setting: 1.
 #define wxUSE_STD_IOSTREAM  1
 
 // ----------------------------------------------------------------------------
@@ -398,7 +398,7 @@
 #define wxUSE_TEXTFILE      1
 
 // i18n support: _() macro, wxLocale class.
-#define wxUSE_INTL          1
+#define wxUSE_INTL          0
 
 // Provide wxFoo_l() functions similar to standard foo() functions but taking
 // an extra locale parameter.
@@ -487,10 +487,10 @@
 // Default is 1.
 //
 // Recommended setting: 1
-#define wxUSE_DYNLIB_CLASS    1
+#define wxUSE_DYNLIB_CLASS    0
 
 // experimental, don't use for now
-#define wxUSE_DYNAMIC_LOADER  1
+#define wxUSE_DYNAMIC_LOADER  0
 
 // Set to 1 to use socket classes
 #define wxUSE_SOCKETS       1
@@ -657,7 +657,7 @@
 // Default is 1.
 //
 // Recommended setting: 1
-#define wxUSE_MEDIACTRL     1
+#define wxUSE_MEDIACTRL     0
 
 // Use wxWidget's XRC XML-based resource system.  Recommended.
 //
@@ -772,7 +772,7 @@
 // Default is 0
 //
 // Recommended setting: 0
-#define wxUSE_CAIRO 0
+#define wxUSE_CAIRO 1
 
 
 // ----------------------------------------------------------------------------
@@ -1738,6 +1738,9 @@
 // Recommended setting: 1, set to 0 if your programs never crash
 #define wxUSE_CRASHREPORT 0
 /* --- end MSW options --- */
+
+// [Randalphwa - 10-26-2023] Throws a recursive assertion in GTK debug build
+#define wxUSE_LOG_TRACE 0
 
 // GTK-specific options used when not using configure. As we can't test for the
 // exact GTK version (without including GTK+ headers that we don't want to
