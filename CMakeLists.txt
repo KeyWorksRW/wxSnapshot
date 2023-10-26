@@ -107,6 +107,7 @@ if (WIN32)
 elseif (UNIX)
     target_compile_definitions(wxWidgets33 PRIVATE
         __WXGTK3__
+        __WXGTK220__  # required for activityindicator.cpp to be pulled in
         __UNIX__
     )
 endif()
