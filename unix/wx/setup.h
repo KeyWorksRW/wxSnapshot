@@ -201,13 +201,13 @@
 #define wxUSE_LOG 1
 
 // Recommended setting: 1
-#define wxUSE_LOGWINDOW 1
+#define wxUSE_LOGWINDOW 0
 
 // Recommended setting: 1
 #define wxUSE_LOGGUI 1
 
 // Recommended setting: 1
-#define wxUSE_LOG_DIALOG 1
+#define wxUSE_LOG_DIALOG 0
 
 // Support for command line parsing using wxCmdLineParser class.
 //
@@ -255,7 +255,7 @@
 // Default is 1
 //
 // Recommended setting: 1 if you want to support multiple languages
-#define wxUSE_PRINTF_POS_PARAMS      1
+#define wxUSE_PRINTF_POS_PARAMS      0
 
 // ----------------------------------------------------------------------------
 // Interoperability with the standard library.
@@ -1746,6 +1746,7 @@
 // exact GTK version (without including GTK+ headers that we don't want to
 // include from our own public headers), just assume a recent GTK 2.x.
 #define __WXGTK__
+#define __WXGTK220__
 #define __WXGTK3__
 
 #define wxUSE_LIBMSPACK 0
