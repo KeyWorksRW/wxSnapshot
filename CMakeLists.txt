@@ -87,7 +87,7 @@ elseif (UNIX)
 endif()
 
 if (UNIX)
-    set (wxCLib_platform_files 
+    set (wxCLib_platform_files
         # src/gtk/treeentry_gtk.c
         src/tiff/libtiff/tif_unix.c
         src/tiff/libtiff/libtiff.def
@@ -97,7 +97,7 @@ else()
     # set (wxCLib_platform_files "")
 endif()
 
-add_library(wxCLib STATIC 
+add_library(wxCLib STATIC
     ${wxCLib_sources}
     ${wxCLib_platform_files}
 )
