@@ -111,7 +111,10 @@
 //
 // Recommended setting: 0 but can be set to 1 if your program is always run in
 // an UTF-8 locale.
-#define wxUSE_UTF8_LOCALE_ONLY 1
+
+// [Randalphwa - 11-09-2023] Needs to be 0 for Unix builds or you will end up
+// in recursive assert.
+#define wxUSE_UTF8_LOCALE_ONLY 0
 
 // ----------------------------------------------------------------------------
 // debugging settings
