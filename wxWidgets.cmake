@@ -95,6 +95,7 @@ set (common_sources
     src/common/fontutilcmn.cpp
     src/common/framecmn.cpp
     src/common/fs_arc.cpp
+    src/common/fs_data.cpp
     src/common/fs_filter.cpp
     src/common/fs_inet.cpp
     src/common/fs_mem.cpp
@@ -235,6 +236,7 @@ set (common_sources
     src/common/webrequest.cpp
     src/common/webrequest_curl.cpp
     src/common/webview.cpp
+    src/common/webview_chromium.cpp
     src/common/webviewarchivehandler.cpp
     src/common/webviewfshandler.cpp
     src/common/wfstream.cpp
