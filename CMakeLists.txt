@@ -70,13 +70,18 @@ elseif(UNIX)
     set(CMAKE_C_FLAGS_RELEASE ${cl_optimize} CACHE STRING "C Release flags" FORCE)
 endif()
 
+include(GNUInstallDirs)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
+
 include( wxWidgets.cmake )  # This will set ${common_sources}, ${msw_sources}, ${unix_sources} and ${osx_sources}
 include( wxCLib.cmake )     # This will set ${wxCLib_sources} with list of files
 
 if (WIN32)
     list(APPEND wxCLib_sources src/tiff/libtiff/tif_win32.c)
 endif()
-
 
 if (WIN32)
     add_library(wxWidgets33 ${common_sources} ${msw_sources} )
@@ -204,3 +209,15 @@ if (BUILD_SHARED_LIBS)
         target_link_libraries(wxWidgets33 PRIVATE wxCLib Winmm Ws2_32 Rpcrt4 Comctl32)
     endif()
 endif()
+
+# Specify the input template
+set(TEMPLATE_DIR ${CMAKE_SOURCE_DIR}/cmake)
+set(TEMPLATE_FILE ${TEMPLATE_DIR}/wxSnapshotConfig.cmake.in)
+
+# Create a Config.cmake file for the build tree
+include(CMakePackageConfigHelpers)
+configure_file(
+    ${TEMPLATE_FILE}
+    "${CMAKE_CURRENT_LIST_DIR}/wxSnapshotConfig.cmake"
+    @ONLY
+)
