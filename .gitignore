@@ -1,5 +1,8 @@
 setup.h
 
+# This file gets generated from cmake/wxSnapshotConfig.cmake.in
+wxSnapshotConfig.cmake
+
 build/
 buildgtk/
 
