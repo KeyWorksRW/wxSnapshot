@@ -6,15 +6,19 @@ set(wxWidgets_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 # Set the path/names of the libraries to link to
 set(wxWidgets_LIB_DIRS
-   "@CMAKE_BINARY_DIR@/lib" 
+   "@CMAKE_BINARY_DIR@/lib"
 )
-
-message(NOTICE "Setting CMAKE_DEBUG_POSTFIX to 'd' to match wxWidgets debug library filenames")
-set (CMAKE_DEBUG_POSTFIX d)
 
 # Set the names of the libraries to link to
 if(BUILD_SHARED_LIBS)
-    set(wxWidgets_LIBRARIES wxWidgets33${CMAKE_DEBUG_POSTFIX})
+    set(wxWidgets_LIBRARIES wxWidgets33)
 else()
-    set(wxWidgets_LIBRARIES "wxWidgets33${CMAKE_DEBUG_POSTFIX} wxCLib${CMAKE_DEBUG_POSTFIX}")
+    set(wxWidgets_LIBRARIES "wxWidgets33 wxCLib")
 endif()
+
+# Add 'd' as a suffix to the libraries in Debug builds
+foreach(item IN LISTS wxWidgets_LIBRARIES)
+    set(new_item "${item}$<$<CONFIG:Debug>:d>")
+    list(REMOVE_ITEM wxWidgets_LIBRARIES ${item})
+    list(APPEND wxWidgets_LIBRARIES ${new_item})
+endforeach()
