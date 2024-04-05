@@ -13,7 +13,7 @@ set(wxWidgets_LIB_DIRS
 if(BUILD_SHARED_LIBS)
     set(wxWidgets_LIBRARIES wxWidgets33)
 else()
-    set(wxWidgets_LIBRARIES "wxWidgets33 wxCLib")
+    set(wxWidgets_LIBRARIES "wxWidgets33" "wxCLib")
 endif()
 
 # Add 'd' as a suffix to the libraries in Debug builds
