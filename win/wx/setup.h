@@ -397,8 +397,11 @@
 // wxFileConfig
 #define wxUSE_TEXTFILE      1
 
+// REVIEW: [Randalphwa - 12-05-2024] Currently, if this is 0 then wxLanguageInfo in
+// wx/private/language.h will not be defined.
+
 // i18n support: _() macro, wxLocale class.
-#define wxUSE_INTL          0
+#define wxUSE_INTL          1
 
 // Provide wxFoo_l() functions similar to standard foo() functions but taking
 // an extra locale parameter.

@@ -404,7 +404,7 @@
 #define wxUSE_TEXTFILE      1
 
 // i18n support: _() macro, wxLocale class.
-#define wxUSE_INTL          0
+#define wxUSE_INTL          1
 
 // Provide wxFoo_l() functions similar to standard foo() functions but taking
 // an extra locale parameter.
