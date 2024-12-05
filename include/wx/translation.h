@@ -50,8 +50,9 @@ using wxTranslationsHashMap = std::unordered_map<wxString, wxString>;
 #else
     #define _(s)                               wxGetTranslation(wxASCII_STR(s))
 #endif
-    #define wxPLURAL(sing, plur, n)            wxGetTranslation((sing), (plur), n)
 #endif
+
+#define wxPLURAL(sing, plur, n)                wxGetTranslation((sing), (plur), n)
 
 // wx-specific macro for translating strings in the given context: if you use
 // them, you need to also add
@@ -62,10 +63,10 @@ using wxTranslationsHashMap = std::unordered_map<wxString, wxString>;
     wxGetTranslation((s), wxString(), c)
 #else
 #define wxGETTEXT_IN_CONTEXT(c, s) \
-    wxGetTranslation(wxASCII_STR(s), wxString(), c)
+    wxGetTranslation(wxASCII_STR(s), wxString(), wxASCII_STR(c))
 #endif
 #define wxGETTEXT_IN_CONTEXT_PLURAL(c, sing, plur, n) \
-    wxGetTranslation((sing), (plur), n, wxString(), c)
+    wxGetTranslation(wxASCII_STR(sing), wxASCII_STR(plur), n, wxString(), wxASCII_STR(c))
 
 // another one which just marks the strings for extraction, but doesn't
 // perform the translation (use -kwxTRANSLATE with xgettext!)
@@ -160,7 +161,7 @@ public:
 
     // add catalog for the given domain returning true if it could be found by
     // wxTranslationsLoader
-    bool AddAvailableCatalog(const wxString& domain);
+    bool AddAvailableCatalog(const wxString& domain, wxLanguage msgIdLanguage = wxLANGUAGE_ENGLISH_US);
 
     // add standard wxWidgets catalog ("wxstd")
     bool AddStdCatalog();
@@ -193,6 +194,15 @@ public:
     static const wxString& GetUntranslatedString(const wxString& str);
 
 private:
+    enum class Translations
+    {
+      NotNeeded = -1,
+      NotFound = 0,
+      Found = 1
+    };
+
+    Translations DoAddCatalog(const wxString& domain, wxLanguage msgIdLanguage);
+
     // perform loading of the catalog via m_loader
     bool LoadCatalog(const wxString& domain, const wxString& lang);
 
@@ -202,6 +212,8 @@ private:
     // same as Set(), without taking ownership; only for wxLocale
     static void SetNonOwned(wxTranslations *t);
     friend class wxLocale;
+
+    wxString DoGetBestAvailableTranslation(const wxString& domain, const wxString& additionalAvailableLanguage);
 
 private:
     wxString m_lang;

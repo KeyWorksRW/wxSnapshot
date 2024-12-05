@@ -26,6 +26,7 @@
 
 #include <string>
 #include <map>
+#include <functional>
 
 #include "ILexer.h"
 #include "Scintilla.h"
@@ -34,12 +35,13 @@
 #include "WordList.h"
 #include "LexAccessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 #include "OptionSet.h"
 #include "DefaultLexer.h"
 
 using namespace Scintilla;
+using namespace Lexilla;
 
 /* Bits:
  * 1  - whitespace

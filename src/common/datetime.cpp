@@ -26,7 +26,8 @@
  *    algorithms limitations, only dates from Nov 24, 4714BC are handled
  *
  * 3. standard ANSI C functions are used to do time calculations whenever
- *    possible, i.e. when the date is in the range Jan 1, 1970 to 2038
+ *    possible, i.e. when the date is in time_t range, i.e. after Jan 1, 1970
+ *    and, for 32-bit time_t, before 2038.
  *
  * 4. otherwise, the calculations are done by converting the date to/from JDN
  *    first (the range limitation mentioned above comes from here: the
@@ -1268,13 +1269,18 @@ wxDateTime& wxDateTime::Set(wxDateTime_t day,
     wxDATETIME_CHECK( (0 < day) && (day <= GetNumberOfDays(month, year)),
                       wxT("Invalid date in wxDateTime::Set()") );
 
-    // the range of time_t type (inclusive)
+    // Check if we can use the standard library implementation: this only works
+    // for the dates representable by time_t, i.e. after the beginning of the
+    // Epoch and, for 32-bit time_t, before 2038 (for 64-bit time_t, the range
+    // is unlimited and while we can't be sure that the standard library works
+    // for the dates in the distant future, we are not going to do better
+    // ourselves neither, so let it handle them).
     static const int yearMinInRange = 1970;
     static const int yearMaxInRange = 2037;
 
     // test only the year instead of testing for the exact end of the Unix
     // time_t range - it doesn't bring anything to do more precise checks
-    if ( year >= yearMinInRange && year <= yearMaxInRange )
+    if ( year >= yearMinInRange && (sizeof(time_t) > 4 || year <= yearMaxInRange) )
     {
         // use the standard library version if the date is in range - this is
         // probably more efficient than our code
@@ -2300,13 +2306,13 @@ wxDateTime wxDateTimeUSCatholicFeasts::GetEaster(int year)
     const float A = year % 19;
     const float B = year % 4;
     const float C = year % 7;
-    const float P = std::floor((float)year / 100.0);
+    const float P = std::floor(year / 100.0f);
 
-    const float Q = std::floor((float)(13 + 8 * P) / 25.0);
+    const float Q = std::floor((13 + 8 * P) / 25.0f);
 
-    const float M = (int)(15 - Q + P - std::floor((float)P / 4)) % 30;
+    const float M = (int)(15 - Q + P - std::floor(P / 4)) % 30;
 
-    const float N = (int)(4 + P - std::floor((float)P / 4)) % 7;
+    const float N = (int)(4 + P - std::floor(P / 4)) % 7;
 
     const float D = (int)(19 * A + M) % 30;
 

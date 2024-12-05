@@ -22,7 +22,7 @@
 #include "LexerBase.h"
 #include "LexerSimple.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 LexerModule::LexerModule(int language_,
 	LexerFunction fnLexer_,
@@ -90,7 +90,7 @@ size_t LexerModule::NamedStyles() const noexcept {
 	return nClasses;
 }
 
-ILexer5 *LexerModule::Create() const {
+Scintilla::ILexer5 *LexerModule::Create() const {
 	if (fnFactory)
 		return fnFactory();
 	else
@@ -115,7 +115,7 @@ void LexerModule::Fold(Sci_PositionU startPos, Sci_Position lengthDoc, int initS
 			startPos = newStartPos;
 			initStyle = 0;
 			if (startPos > 0) {
-				initStyle = styler.StyleAt(startPos - 1);
+				initStyle = styler.StyleIndexAt(startPos - 1);
 			}
 		}
 		fnFolder(startPos, lengthDoc, initStyle, keywordlists, styler);

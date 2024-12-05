@@ -377,6 +377,11 @@ set (common_sources
 
     src/stc/lexilla/src/Lexilla.cxx
 
+    # REVIEW: [Randalphwa - 12-05-2024] New files added
+    src/stc/lexilla/lexers/LexAsciidoc.cxx
+    src/stc/lexilla/lexers/LexGDScript.cxx
+    src/stc/lexilla/lexers/LexJulia.cxx
+
     src/stc/lexilla/lexers/LexA68k.cxx
     src/stc/lexilla/lexers/LexAbaqus.cxx
     src/stc/lexilla/lexers/LexAda.cxx
@@ -493,9 +498,17 @@ set (common_sources
     src/stc/lexilla/lexers/LexX12.cxx
     src/stc/lexilla/lexers/LexYAML.cxx
 
+    # REVIEW: [Randalphwa - 12-05-2024] New files added
+    src/stc/lexilla/lexlib/InList.cxx
+    src/stc/lexilla/lexlib/LexAccessor.cxx
+    src/stc/lexilla/lexlib/LexCharacterCategory.cxx
+    src/stc/lexilla/lexlib/LexCharacterSet.cxx
+
+    # REVIEW: [Randalphwa - 12-05-2024] Files removed
+    # src/stc/lexilla/lexlib/CharacterCategory.cxx
+    # src/stc/lexilla/lexlib/CharacterSet.cxx
+
     src/stc/lexilla/lexlib/Accessor.cxx
-    src/stc/lexilla/lexlib/CharacterCategory.cxx
-    src/stc/lexilla/lexlib/CharacterSet.cxx
     src/stc/lexilla/lexlib/DefaultLexer.cxx
     src/stc/lexilla/lexlib/LexerBase.cxx
     src/stc/lexilla/lexlib/LexerModule.cxx
@@ -506,6 +519,10 @@ set (common_sources
     src/stc/lexilla/lexlib/WordList.cxx
 
     src/stc/lexilla/access/LexillaAccess.cxx
+
+    # REVIEW: [Randalphwa - 12-05-2024] New files added
+    src/stc/scintilla/src/CharacterCategory.cxx
+    src/stc/scintilla/src/CharacterSet.cxx
 
     src/stc/scintilla/src/AutoComplete.cxx
     src/stc/scintilla/src/CallTip.cxx
@@ -541,6 +558,10 @@ set (common_sources
     src/stc/ScintillaWX.cpp
 
     src/xml/xml.cpp
+
+    # REVIEW: [Randalphwa - 12-05-2024] New files added
+    src/xrc/xh_propgrid.cpp
+    src/xrc/xh_vlistbox.cpp
 
     src/xrc/xh_activityindicator.cpp
     src/xrc/xh_animatctrl.cpp

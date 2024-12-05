@@ -26,6 +26,7 @@ Differentiate between labels and variables
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <functional>
 
 #include "ILexer.h"
 #include "Scintilla.h"
@@ -34,13 +35,14 @@ Differentiate between labels and variables
 #include "WordList.h"
 #include "LexAccessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 #include "OptionSet.h"
 #include "SparseState.h"
 #include "DefaultLexer.h"
 
 using namespace Scintilla;
+using namespace Lexilla;
 
 namespace {
    // Use an unnamed namespace to protect the functions and classes from name conflicts
@@ -217,6 +219,13 @@ Sci_Position SCI_METHOD LexerABL::WordListSet(int n, const char *wl) {
    }
    return firstModification;
 }
+
+#if defined(__clang__)
+#if __has_warning("-Wunused-but-set-variable")
+// Disable warning for visibleChars
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#endif
+#endif
 
 void SCI_METHOD LexerABL::Lex(Sci_PositionU startPos, Sci_Position length, int initStyle, IDocument *pAccess) {
    LexAccessor styler(pAccess);

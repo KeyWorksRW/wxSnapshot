@@ -17,6 +17,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <string>
+
 #include "ILexer.h"
 #include "Scintilla.h"
 #include "SciLexer.h"
@@ -25,10 +27,10 @@
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 static void ColouriseVHDLDoc(
   Sci_PositionU startPos,
@@ -232,7 +234,7 @@ static void FoldNoBoxVHDLDoc(
   // Decided it would be smarter to have the lexer have all keywords included. Therefore I
   // don't check if the style for the keywords that I use to adjust the levels.
   char words[] =
-    "architecture begin block case component else elsif end entity generate loop package process record then "
+    "architecture begin block case component else elsif end entity for generate loop package process record then "
     "procedure protected function when units";
   WordList keywords;
   keywords.Set(words);
@@ -393,7 +395,6 @@ static void FoldNoBoxVHDLDoc(
           if (
             strcmp(s, "architecture") == 0  ||
             strcmp(s, "case") == 0          ||
-            strcmp(s, "generate") == 0      ||
             strcmp(s, "block") == 0         ||
             strcmp(s, "loop") == 0          ||
             strcmp(s, "package") ==0        ||
@@ -404,6 +405,16 @@ static void FoldNoBoxVHDLDoc(
             strcmp(s, "units") == 0)
           {
             if (strcmp(prevWord, "end") != 0)
+            {
+              if (levelMinCurrentElse > levelNext) {
+                levelMinCurrentElse = levelNext;
+              }
+              levelNext++;
+            }
+          } else if (strcmp(s, "generate") == 0){
+            if (strcmp(prevWord, "end") != 0 &&
+                strcmp(prevWord, "else") != 0 && // vhdl08 else generate
+                strcmp(prevWord, "case") != 0)   // vhdl08 case generate
             {
               if (levelMinCurrentElse > levelNext) {
                 levelMinCurrentElse = levelNext;
@@ -476,7 +487,7 @@ static void FoldNoBoxVHDLDoc(
 
           } else if (strcmp(s, "end") == 0) {
             levelNext--;
-          }  else if(strcmp(s, "elsif") == 0) { // elsif is followed by then so folding occurs correctly
+          }  else if(strcmp(s, "elsif") == 0) { // elsif is followed by then or generate so folding occurs correctly
             levelNext--;
           } else if (strcmp(s, "else") == 0) {
             if(strcmp(prevWord, "when") != 0)  // ignore a <= x when y else z;
@@ -486,7 +497,8 @@ static void FoldNoBoxVHDLDoc(
           } else if(
             ((strcmp(s, "begin") == 0) && (strcmp(prevWord, "architecture") == 0)) ||
             ((strcmp(s, "begin") == 0) && (strcmp(prevWord, "function") == 0)) ||
-            ((strcmp(s, "begin") == 0) && (strcmp(prevWord, "procedure") == 0)))
+            ((strcmp(s, "begin") == 0) && (strcmp(prevWord, "procedure") == 0)) ||
+            ((strcmp(s, "begin") == 0) && (strcmp(prevWord, "generate") == 0)))
           {
             levelMinCurrentBegin = levelNext - 1;
           }

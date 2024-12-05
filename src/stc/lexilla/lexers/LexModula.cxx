@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <string>
+
 #include "ILexer.h"
 #include "Scintilla.h"
 #include "SciLexer.h"
@@ -25,10 +27,10 @@
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 #ifdef DEBUG_LEX_MODULA
 #define DEBUG_STATE( p, c )\
@@ -80,7 +82,7 @@ static inline unsigned IsOperator( StyleContext & sc, WordList & op ) {
 static inline bool IsEOL( Accessor &styler, Sci_PositionU curPos ) {
 	unsigned ch = styler.SafeGetCharAt( curPos );
 	if( ( ch == '\r' && styler.SafeGetCharAt( curPos + 1 ) == '\n' ) ||
-		( ch == '\n' ) ) {
+		( ch == '\n' && styler.SafeGetCharAt( curPos - 1 ) != '\r' ) ) {
 		return true;
 	}
 	return false;
@@ -258,7 +260,7 @@ static void FoldModulaDoc( Sci_PositionU startPos,
 					if( clv_new < clv_old ) {
 						nextLevel--;
 						pos = styler.LineStart( cln );
-						while( ( ch = styler.SafeGetCharAt( pos ) ) != '\n' ) {
+						while( ( ch = styler.SafeGetCharAt( pos, '\n' )) != '\n') {
 							if( ch == 'P' ) {
 								if( styler.StyleAt(pos) == SCE_MODULA_KEYWORD )	{
 									if( checkKeyIdentOper( styler, pos, endPos,
@@ -383,6 +385,8 @@ static void ColouriseModulaDoc(	Sci_PositionU startPos,
 						continue;
 					} else {
 						/** check procedure identifier */
+						sc.Forward( kl );
+						continue;
 					}
 				} else {
 					for( i = 0; i < BUFLEN - 1; i++ ) {

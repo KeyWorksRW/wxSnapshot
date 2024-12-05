@@ -6,16 +6,48 @@
 // This file is in the public domain.
 
 #include <cstdlib>
+#include <cstdint>
 #include <cassert>
+
+#include <string>
 
 #include "ILexer.h"
 
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
+
+StyleContext::StyleContext(Sci_PositionU startPos, Sci_PositionU length,
+	int initStyle, LexAccessor &styler_, char chMask) :
+	styler(styler_),
+	multiByteAccess((styler.Encoding() == EncodingType::eightBit) ? nullptr : styler.MultiByteAccess()),
+	lengthDocument(static_cast<Sci_PositionU>(styler.Length())),
+	endPos(((startPos + length) < lengthDocument) ? (startPos + length) : (lengthDocument+1)),
+	lineDocEnd(styler.GetLine(lengthDocument)),
+	currentPosLastRelative(SIZE_MAX),
+	currentPos(startPos),
+	currentLine(styler.GetLine(startPos)),
+	lineEnd(styler.LineEnd(currentLine)),
+	lineStartNext(styler.LineStart(currentLine + 1)),
+	atLineStart(static_cast<Sci_PositionU>(styler.LineStart(currentLine)) == startPos),
+	// Mask off all bits which aren't in the chMask.
+	state(initStyle &chMask) {
+
+	styler.StartAt(startPos /*, chMask*/);
+	styler.StartSegment(startPos);
+
+	chPrev = GetRelativeCharacter(-1);
+
+	// Variable width is now 0 so GetNextChar gets the char at currentPos into chNext/widthNext
+	GetNextChar();
+	ch = chNext;
+	width = widthNext;
+
+	GetNextChar();
+}
 
 bool StyleContext::MatchIgnoreCase(const char *s) {
 	if (MakeLowerCase(ch) != static_cast<unsigned char>(*s))
@@ -33,36 +65,21 @@ bool StyleContext::MatchIgnoreCase(const char *s) {
 	return true;
 }
 
-static void getRange(Sci_PositionU start,
-		Sci_PositionU end,
-		LexAccessor &styler,
-		char *s,
-		Sci_PositionU len) {
-	Sci_PositionU i = 0;
-	while ((i < end - start + 1) && (i < len-1)) {
-		s[i] = styler[start + i];
-		i++;
-	}
-	s[i] = '\0';
-}
-
 void StyleContext::GetCurrent(char *s, Sci_PositionU len) {
-	getRange(styler.GetStartSegment(), currentPos - 1, styler, s, len);
-}
-
-static void getRangeLowered(Sci_PositionU start,
-		Sci_PositionU end,
-		LexAccessor &styler,
-		char *s,
-		Sci_PositionU len) {
-	Sci_PositionU i = 0;
-	while ((i < end - start + 1) && (i < len-1)) {
-		s[i] = MakeLowerCase(styler[start + i]);
-		i++;
-	}
-	s[i] = '\0';
+	styler.GetRange(styler.GetStartSegment(), currentPos, s, len);
 }
 
 void StyleContext::GetCurrentLowered(char *s, Sci_PositionU len) {
-	getRangeLowered(styler.GetStartSegment(), currentPos - 1, styler, s, len);
+	styler.GetRangeLowered(styler.GetStartSegment(), currentPos, s, len);
+}
+
+void StyleContext::GetCurrentString(std::string &string, Transform transform) {
+	const Sci_PositionU startPos = styler.GetStartSegment();
+	const Sci_PositionU len = currentPos - styler.GetStartSegment();
+	string.resize(len);
+	if (transform == Transform::lower) {
+		styler.GetRangeLowered(startPos, currentPos, (char*)string.data(), len + 1);
+	} else {
+		styler.GetRange(startPos, currentPos, (char*)string.data(), len + 1);
+	}
 }

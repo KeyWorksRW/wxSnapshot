@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 
 #include "ILexer.h"
 #include "Scintilla.h"
@@ -53,13 +54,14 @@
 #include "WordList.h"
 #include "LexAccessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
-#include "CharacterCategory.h"
+#include "LexCharacterSet.h"
+#include "LexCharacterCategory.h"
 #include "LexerModule.h"
 #include "OptionSet.h"
 #include "DefaultLexer.h"
 
 using namespace Scintilla;
+using namespace Lexilla;
 
 namespace { // anonymous namespace to isolate any name clashes
 /*----------------------------------------------------------------------------*
@@ -216,6 +218,21 @@ bool IsCommentLine(Sci_Position line, LexAccessor &styler, int type = SCE_RAKU_C
 }
 
 /*
+ * ContainsQTo
+ * - returns true if this range contains ":to" in style SCE_RAKU_ADVERB indicating the start
+ * of a SCE_RAKU_HEREDOC_Q or SCE_RAKU_HEREDOC_QQ.
+ */
+bool ContainsQTo(Sci_Position start, Sci_Position end, LexAccessor &styler) {
+	std::string adverb;
+	for (Sci_Position i = start; i < end; i++) {
+		if (styler.StyleAt(i) == SCE_RAKU_ADVERB) {
+			adverb.push_back(styler[i]);
+		}
+	}
+	return adverb.find(":to") != std::string::npos;
+}
+
+/*
  * GetBracketCloseChar
  * - returns the end bracket char: opposite of start
  *   - see: http://www.unicode.org/Public/5.1.0/ucd/BidiMirroring.txt (first section)
@@ -321,7 +338,7 @@ bool IsValidRegOrQAdjacent(int ch) noexcept {
 
 /*
  * IsValidRegOrQPrecede
- * - returns true if ch is a valid preceeding character to put directly before Q / q
+ * - returns true if ch is a valid preceding character to put directly before Q / q
  *   * ref: Q Language: https://docs.raku.org/language/quoting
  */
 bool IsValidRegOrQPrecede(int ch) noexcept {
@@ -451,7 +468,7 @@ bool IsRegexStartAtScPos(StyleContext &sc, int &type, CharacterSet &set) {
 
 /*
  * IsValidIdentPrecede
- * - returns if ch is a valid preceeding char to put directly before an identifier
+ * - returns if ch is a valid preceding char to put directly before an identifier
  */
 bool IsValidIdentPrecede(int ch) noexcept {
 	return !(IsAlphaNumeric(ch) || ch == '_' || ch == '@' || ch == '$' || ch == '%');
@@ -468,7 +485,7 @@ bool IsValidDelimiter(int ch) noexcept {
 
 /*
  * GetDelimiterCloseChar
- * - returns the corrisponding close char for a given delimiter (could be the same char)
+ * - returns the corresponding close char for a given delimiter (could be the same char)
  */
 int GetDelimiterCloseChar(int ch) noexcept {
 	int ch_end = GetBracketCloseChar(ch);
@@ -480,7 +497,7 @@ int GetDelimiterCloseChar(int ch) noexcept {
 
 /*
  * GetRepeatCharCount
- * - returns the occurence count of match
+ * - returns the occurrence count of match
  */
 Sci_Position GetRepeatCharCount(StyleContext &sc, int chMatch, Sci_Position length) {
 	Sci_Position cnt = 0;
@@ -503,6 +520,7 @@ Sci_Position LengthToDelimiter(StyleContext &sc, const DelimPair &dp,
 		Sci_Position length, bool noTrailing = false) {
 	short cnt_open = 0;			// count open bracket
 	short cnt_close = 0;		// count close bracket
+	bool is_escape = false;		// has been escaped using '\'?
 	Sci_Position len = 0;		// count characters
 	int chOpener = dp.opener;	// look for nested opener / closer
 	if (dp.opener == dp.closer[0])
@@ -515,10 +533,14 @@ Sci_Position LengthToDelimiter(StyleContext &sc, const DelimPair &dp,
 
 		if (cnt_open == 0 && cnt_close == dp.count) {
 			return len;				// end condition has been met
+		} else if (is_escape) {
+			is_escape = false;
+		} else if (ch == '\\') {
+			is_escape = true;
 		} else {
-			if (chPrev != '\\' && ch == chOpener) {			// ignore escape sequence
+			if (ch == chOpener) {
 				cnt_open++;			// open nested bracket
-			} else if (chPrev != '\\' && dp.isCloser(ch)) {	// ignore escape sequence
+			} else if (dp.isCloser(ch)) {
 				if ( cnt_open > 0 ) {
 					cnt_open--;		// close nested bracket
 				} else if (dp.count > 1 && cnt_close < (dp.count - 1)) {
@@ -589,8 +611,8 @@ Sci_Position LengthToNextChar(StyleContext &sc, const Sci_Position length) {
 
 /*
  * GetRelativeString
- * - gets a relitive string and sets it in &str
- *   - resets string before seting
+ * - gets a relative string and sets it in &str
+ *   - resets string before setting
  */
 void GetRelativeString(StyleContext &sc, Sci_Position offset, Sci_Position length,
 		std::string &str) {
@@ -731,7 +753,7 @@ bool LexerRaku::IsOperatorChar(const int ch) {
  *   FIXME: *still* may not contain all valid characters
  */
 bool LexerRaku::IsWordChar(const int ch, bool allowNumber) {
-	// Unicode numbers should not apear in word identifiers
+	// Unicode numbers should not appear in word identifiers
 	if (ch > 0x7F) {
 		const CharacterCategory cc = CategoriseCharacter(ch);
 		switch (cc) {
@@ -1010,40 +1032,49 @@ Sci_Position LexerRaku::LengthToNonWordChar(StyleContext &sc, Sci_Position lengt
  */
 void SCI_METHOD LexerRaku::Lex(Sci_PositionU startPos, Sci_Position length, int initStyle, IDocument *pAccess) {
 	LexAccessor styler(pAccess);
-	DelimPair dpEmbeded;			// delimiter pair: embeded comments
+	DelimPair dpEmbeded;			// delimiter pair: embedded comments
 	DelimPair dpString;				// delimiter pair: string
 	DelimPair dpRegQ;				// delimiter pair: Regex / Q Lang
 	std::string hereDelim;			// heredoc delimiter (if in heredoc)
 	int hereState = 0;				// heredoc state to use (Q / QQ)
 	int numState = 0;				// number state / type
-	short cntDecimal = 0;			// number decinal count
+	short cntDecimal = 0;			// number decimal count
 	std::string wordLast;			// last word seen
 	std::string identLast;			// last identifier seen
 	std::string adverbLast;			// last (single) adverb seen
 	WordList lastAdverbs;			// last adverbs seen
 	Sci_Position len;				// temp length value
 	char s[100];					// temp char string
-	int typeDetect;					// temp type detected (for regex and Q lang)
+	int typeDetect = -1;			// temp type detected (for regex and Q lang)
 	Sci_Position lengthToEnd;		// length until the end of range
 
-	// Backtrack to last SCE_RAKU_DEFAULT or 0
+	// Backtrack to safe start position before complex quoted elements
+
 	Sci_PositionU newStartPos = startPos;
 	if (initStyle != SCE_RAKU_DEFAULT) {
+		// Backtrack to last SCE_RAKU_DEFAULT or 0
 		while (newStartPos > 0) {
 			newStartPos--;
 			if (styler.StyleAt(newStartPos) == SCE_RAKU_DEFAULT)
 				break;
 		}
-	}
-
-	// Backtrack to start of line before SCE_RAKU_HEREDOC_Q?
-	if (initStyle == SCE_RAKU_HEREDOC_Q || initStyle == SCE_RAKU_HEREDOC_QQ) {
-		while (newStartPos > 0) {
-			if (IsANewLine(styler.SafeGetCharAt(newStartPos - 1)))
-				break; // Stop if previous char is a new line
-			newStartPos--;
+		// Backtrack to start of line before SCE_RAKU_HEREDOC_Q?
+		if (initStyle == SCE_RAKU_HEREDOC_Q || initStyle == SCE_RAKU_HEREDOC_QQ) {
+			if (newStartPos > 0) {
+				newStartPos = styler.LineStart(styler.GetLine(newStartPos));
+			}
+		}
+	} else {
+		const Sci_Position line = styler.GetLine(newStartPos);
+		if (line > 0) {
+			// If the previous line is a start of a q or qq heredoc, backtrack to start of line
+			const Sci_Position startPreviousLine = styler.LineStart(line-1);
+			if (ContainsQTo(startPreviousLine, newStartPos, styler)) {
+				newStartPos = startPreviousLine;
+			}
 		}
 	}
+
 
 	// Re-calculate (any) changed startPos, length and initStyle state
 	if (newStartPos < startPos) {
@@ -1184,7 +1215,7 @@ void SCI_METHOD LexerRaku::Lex(Sci_PositionU startPos, Sci_Position length, int 
 						sc.Forward();
 					} else {
 						sc.SetState(SCE_RAKU_DEFAULT);
-						break; // too many decinal places
+						break; // too many decimal places
 					}
 				}
 				switch (numState) {
@@ -1431,7 +1462,7 @@ void SCI_METHOD LexerRaku::Lex(Sci_PositionU startPos, Sci_Position length, int 
 				sc.SetState(hereState);
 			}
 
-			// Reset words: on operator simi-colon OR '}' (end of statement)
+			// Reset words: on operator semi-colon OR '}' (end of statement)
 			if (sc.state == SCE_RAKU_OPERATOR && (sc.ch == ';' || sc.ch == '}')) {
 				wordLast.clear();
 				identLast.clear();
@@ -1448,11 +1479,11 @@ void SCI_METHOD LexerRaku::Lex(Sci_PositionU startPos, Sci_Position length, int 
 				sc.Forward(); // Condition met for "embedded comment"
 				dpEmbeded.opener = sc.ch;
 
-				// Find the opposite (termination) closeing bracket (if any)
+				// Find the opposite (termination) closing bracket (if any)
 				dpEmbeded.closer[0] = GetBracketCloseChar(dpEmbeded.opener);
 				if (dpEmbeded.closer[0] > 0) { // Enter "embedded comment"
 
-					// Find multiple opening character occurence
+					// Find multiple opening character occurrence
 					dpEmbeded.count = GetRepeatCharCount(sc, dpEmbeded.opener, lengthToEnd);
 					sc.SetState(SCE_RAKU_COMMENTEMBED);
 					sc.Forward(dpEmbeded.count - 1); // incremented in the next loop

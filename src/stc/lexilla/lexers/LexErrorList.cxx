@@ -5,27 +5,28 @@
 // Copyright 1998-2001 by Neil Hodgson <neilh@scintilla.org>
 // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <assert.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cassert>
+#include <cstring>
+#include <cstdio>
+#include <cstdarg>
 
 #include <string>
+#include <initializer_list>
 
 #include "ILexer.h"
 #include "Scintilla.h"
 #include "SciLexer.h"
 
+#include "InList.h"
 #include "WordList.h"
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 namespace {
 
@@ -41,11 +42,7 @@ constexpr bool Is1To9(char ch) noexcept {
 	return (ch >= '1') && (ch <= '9');
 }
 
-bool IsAlphabetic(int ch) {
-	return IsASCII(ch) && isalpha(ch);
-}
-
-inline bool AtEOL(Accessor &styler, Sci_PositionU i) {
+bool AtEOL(Accessor &styler, Sci_Position i) {
 	return (styler[i] == '\n') ||
 	       ((styler[i] == '\r') && (styler.SafeGetCharAt(i + 1) != '\n'));
 }
@@ -62,6 +59,23 @@ bool IsGccExcerpt(const char *s) noexcept {
 	}
 	return true;
 }
+
+const std::string bashDiagnosticMark = ": line ";
+bool IsBashDiagnostic(std::string const& sv) {
+	const size_t mark = sv.find(bashDiagnosticMark);
+	if (mark == std::string::npos) {
+		return false;
+	}
+	std::string rest = sv.substr(mark + bashDiagnosticMark.length());
+	if (rest.empty() || !Is0To9(rest.front())) {
+		return false;
+	}
+	while (!rest.empty() && Is0To9(rest.front())) {
+		rest = rest.substr(1);
+	}
+	return !rest.empty() && (rest.front() == ':');
+}
+
 
 int RecogniseErrorListLine(const char *lineBuffer, Sci_PositionU lengthLine, Sci_Position &startValue) {
 	if (lineBuffer[0] == '>') {
@@ -135,7 +149,7 @@ int RecogniseErrorListLine(const char *lineBuffer, Sci_PositionU lengthLine, Sci
 		// HTML tidy style: line 42 column 1
 		return SCE_ERR_TIDY;
 	} else if (strstart(lineBuffer, "\tat ") &&
-	           strstr(lineBuffer, "(") &&
+	           strchr(lineBuffer, '(') &&
 	           strstr(lineBuffer, ".java:")) {
 		// Java stack back trace
 		return SCE_ERR_JAVA_STACK;
@@ -152,6 +166,10 @@ int RecogniseErrorListLine(const char *lineBuffer, Sci_PositionU lengthLine, Sci
 		// Microsoft linker warning:
 		// {<object> : } (warning|error) LNK9999
 		return SCE_ERR_MS;
+	} else if (IsBashDiagnostic(lineBuffer)) {
+		// Bash diagnostic
+		// <filename>: line <line>:<message>
+		return SCE_ERR_BASH;
 	} else if (IsGccExcerpt(lineBuffer)) {
 		// GCC code excerpt and pointer to issue
 		//    73 |   GTimeVal last_popdown;
@@ -233,18 +251,16 @@ int RecogniseErrorListLine(const char *lineBuffer, Sci_PositionU lengthLine, Sci
 				} else if ((ch == ':' && chNext == ' ') || (ch == ' ')) {
 					// Possibly Delphi.. don't test against chNext as it's one of the strings below.
 					char word[512];
-					unsigned numstep;
+					unsigned numstep = 0;
 					if (ch == ' ')
 						numstep = 1; // ch was ' ', handle as if it's a delphi errorline, only add 1 to i.
 					else
 						numstep = 2; // otherwise add 2.
 					Sci_PositionU chPos = 0;
-					for (Sci_PositionU j = i + numstep; j < lengthLine && IsAlphabetic(lineBuffer[j]) && chPos < sizeof(word) - 1; j++)
+					for (Sci_PositionU j = i + numstep; j < lengthLine && IsUpperOrLowerCase(lineBuffer[j]) && chPos < sizeof(word) - 1; j++)
 						word[chPos++] = lineBuffer[j];
 					word[chPos] = 0;
-					if (!CompareCaseInsensitive(word, "error") || !CompareCaseInsensitive(word, "warning") ||
-						!CompareCaseInsensitive(word, "fatal") || !CompareCaseInsensitive(word, "catastrophic") ||
-						!CompareCaseInsensitive(word, "note") || !CompareCaseInsensitive(word, "remark")) {
+					if (InListCaseInsensitive(word, {"error", "warning", "fatal", "catastrophic", "note", "remark"})) {
 						state = stMsVc;
 					} else {
 						state = stUnrecognized;
@@ -341,12 +357,12 @@ void ColouriseErrorListLine(
 		int portionStyle = style;
 		while (const char *startSeq = strstr(linePortion, CSI)) {
 			if (startSeq > linePortion) {
-				styler.ColourTo(startPortion + static_cast<int>(startSeq - linePortion), portionStyle);
+				styler.ColourTo(startPortion + (startSeq - linePortion), portionStyle);
 			}
 			const char *endSeq = startSeq + 2;
 			while (!SequenceEnd(*endSeq))
 				endSeq++;
-			const Sci_Position endSeqPosition = startPortion + static_cast<Sci_Position>(endSeq - linePortion) + 1;
+			const Sci_Position endSeqPosition = startPortion + (endSeq - linePortion) + 1;
 			switch (*endSeq) {
 			case 0:
 				styler.ColourTo(endPos, SCE_ERR_ESCSEQ_UNKNOWN);
@@ -411,4 +427,4 @@ const char *const emptyWordListDesc[] = {
 
 }
 
-LexerModule lmErrorList(SCLEX_ERRORLIST, ColouriseErrorListDoc, "errorlist", 0, emptyWordListDesc);
+LexerModule lmErrorList(SCLEX_ERRORLIST, ColouriseErrorListDoc, "errorlist", nullptr, emptyWordListDesc);

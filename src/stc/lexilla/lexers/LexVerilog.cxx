@@ -17,6 +17,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <functional>
 
 #include "ILexer.h"
 #include "Scintilla.h"
@@ -26,7 +27,7 @@
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 
 #include "OptionSet.h"
@@ -34,6 +35,7 @@
 #include "DefaultLexer.h"
 
 using namespace Scintilla;
+using namespace Lexilla;
 
 namespace {
 	// Use an unnamed namespace to protect the functions and classes from name conflicts
@@ -44,7 +46,7 @@ struct PPDefinition {
 	std::string value;
 	bool isUndef;
 	std::string arguments;
-	PPDefinition(Sci_Position line_, const std::string &key_, const std::string &value_, bool isUndef_ = false, std::string arguments_="") :
+	PPDefinition(Sci_Position line_, const std::string &key_, const std::string &value_, bool isUndef_ = false, const std::string &arguments_ = "") :
 		line(line_), key(key_), value(value_), isUndef(isUndef_), arguments(arguments_) {
 	}
 };
@@ -469,7 +471,7 @@ void SCI_METHOD LexerVerilog::Lex(Sci_PositionU startPos, Sci_Position length, i
 			}
 		}
 
-		if (sc.atLineEnd) {
+		if (sc.MatchLineEnd()) {
 			curLine++;
 			lineEndNext = styler.LineEnd(curLine);
 			vlls.Add(curLine, preproc);
@@ -510,7 +512,7 @@ void SCI_METHOD LexerVerilog::Lex(Sci_PositionU startPos, Sci_Position length, i
 			sc.SetState(state|activitySet);
 		}
 
-		const bool atLineEndBeforeSwitch = sc.atLineEnd;
+		const bool atLineEndBeforeSwitch = sc.MatchLineEnd();
 
 		// Determine if the current state should terminate.
 		switch (MaskActive(sc.state)) {
@@ -561,7 +563,7 @@ void SCI_METHOD LexerVerilog::Lex(Sci_PositionU startPos, Sci_Position length, i
 				}
 				break;
 			case SCE_V_PREPROCESSOR:
-				if (!IsAWordChar(sc.ch) || sc.atLineEnd) {
+				if (!IsAWordChar(sc.ch) || sc.MatchLineEnd()) {
 					sc.SetState(SCE_V_DEFAULT|activitySet);
 				}
 				break;
@@ -590,14 +592,16 @@ void SCI_METHOD LexerVerilog::Lex(Sci_PositionU startPos, Sci_Position length, i
 					}
 				} else if (sc.ch == '\"') {
 					sc.ForwardSetState(SCE_V_DEFAULT|activitySet);
-				} else if (sc.atLineEnd) {
+				} else if (sc.MatchLineEnd()) {
 					sc.ChangeState(SCE_V_STRINGEOL|activitySet);
+					if (sc.Match('\r', '\n'))
+						sc.Forward();
 					sc.ForwardSetState(SCE_V_DEFAULT|activitySet);
 				}
 				break;
 		}
 
-		if (sc.atLineEnd && !atLineEndBeforeSwitch) {
+		if (sc.MatchLineEnd() && !atLineEndBeforeSwitch) {
 			// State exit processing consumed characters up to end of line.
 			curLine++;
 			lineEndNext = styler.LineEnd(curLine);
@@ -615,7 +619,7 @@ void SCI_METHOD LexerVerilog::Lex(Sci_PositionU startPos, Sci_Position length, i
 				do {
 					sc.Forward();
 				} while ((sc.ch == ' ' || sc.ch == '\t') && sc.More());
-				if (sc.atLineEnd) {
+				if (sc.MatchLineEnd()) {
 					sc.SetState(SCE_V_DEFAULT|activitySet);
 					styler.SetLineState(curLine, lineState);
 				} else {

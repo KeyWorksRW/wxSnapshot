@@ -12,6 +12,8 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <ctype.h>
+
+#include <string>
 /***************************************/
 #include "ILexer.h"
 #include "Scintilla.h"
@@ -21,11 +23,18 @@
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 /***************************************/
 
-using namespace Scintilla;
+#if defined(__clang__)
+#if __has_warning("-Wunused-but-set-variable")
+// Disable warning for numNonBlank
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#endif
+#endif
+
+using namespace Lexilla;
 
 /***********************************************/
 static inline bool IsAWordChar(const int ch) {

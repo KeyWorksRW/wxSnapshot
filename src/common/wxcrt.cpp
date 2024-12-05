@@ -810,7 +810,6 @@ wxCRT_StrftimeW(wchar_t *s, size_t maxsize, const wchar_t *fmt, const struct tm 
 }
 #endif // !wxCRT_StrftimeW
 
-#ifdef wxLongLong_t
 template<typename T>
 static wxULongLong_t
 wxCRT_StrtoullBase(const T* nptr, T** endptr, int base, T* sign)
@@ -972,8 +971,6 @@ wxULongLong_t wxCRT_StrtoullA(const char* nptr, char** endptr, int base)
 wxULongLong_t wxCRT_StrtoullW(const wchar_t* nptr, wchar_t** endptr, int base)
     { return wxCRT_DoStrtoull(nptr, endptr, base); }
 #endif
-
-#endif // wxLongLong_t
 
 // ----------------------------------------------------------------------------
 // strtok() functions
@@ -1219,21 +1216,21 @@ int wxVsscanf(const wxCStrData& str, const wchar_t *format, va_list ap)
     } \
     return d;
 
-long android_wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
+WXDLLEXPORT long android_wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
 {
     ANDROID_WCSTO_START
     long d = strtol(dst, &dstendp, base);
     ANDROID_WCSTO_END
 }
 
-unsigned long android_wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
+WXDLLEXPORT unsigned long android_wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
 {
     ANDROID_WCSTO_START
     unsigned long d = strtoul(dst, &dstendp, base);
     ANDROID_WCSTO_END
 }
 
-double android_wcstod(const wchar_t *nptr, wchar_t **endptr)
+WXDLLEXPORT double android_wcstod(const wchar_t *nptr, wchar_t **endptr)
 {
     ANDROID_WCSTO_START
     double d = strtod(dst, &dstendp);

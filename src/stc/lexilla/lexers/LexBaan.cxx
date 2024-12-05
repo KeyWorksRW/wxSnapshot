@@ -17,6 +17,7 @@
 // C++ standard library
 #include <string>
 #include <map>
+#include <functional>
 
 // Scintilla headers
 
@@ -31,12 +32,13 @@
 #include "WordList.h"
 #include "LexAccessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 #include "OptionSet.h"
 #include "DefaultLexer.h"
 
 using namespace Scintilla;
+using namespace Lexilla;
 
 namespace {
 // Use an unnamed namespace to protect the functions and classes from name conflicts

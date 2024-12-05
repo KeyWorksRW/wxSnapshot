@@ -12,6 +12,7 @@
 
 #include <string>
 #include <map>
+#include <functional>
 
 #include "ILexer.h"
 #include "Scintilla.h"
@@ -20,13 +21,14 @@
 #include "WordList.h"
 #include "LexAccessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 #include "OptionSet.h"
 #include "DefaultLexer.h"
 // clang-format on
 
 using namespace Scintilla;
+using namespace Lexilla;
 
 static const char *const lexerName = "fsharp";
 static constexpr int WORDLIST_SIZE = 5;
@@ -45,22 +47,13 @@ static constexpr int keywordClasses[] = {
 namespace {
 
 struct OptionsFSharp {
-	bool fold;
-	bool foldCompact;
-	bool foldComment;
-	bool foldCommentStream;
-	bool foldCommentMultiLine;
-	bool foldPreprocessor;
-	bool foldImports;
-	OptionsFSharp() {
-		fold = true;
-		foldCompact = true;
-		foldComment = true;
-		foldCommentStream = true;
-		foldCommentMultiLine = true;
-		foldPreprocessor = false;
-		foldImports = true;
-	}
+	bool fold = true;
+	bool foldCompact = true;
+	bool foldComment = true;
+	bool foldCommentStream = true;
+	bool foldCommentMultiLine = true;
+	bool foldPreprocessor = false;
+	bool foldImports = true;
 };
 
 struct OptionSetFSharp : public OptionSet<OptionsFSharp> {
@@ -88,22 +81,17 @@ struct OptionSetFSharp : public OptionSet<OptionsFSharp> {
 	}
 };
 
-const CharacterSet setOperators = CharacterSet(CharacterSet::setNone, "~^'-+*/%=@|&<>()[]{};,:!?");
-const CharacterSet setClosingTokens = CharacterSet(CharacterSet::setNone, ")}]");
-const CharacterSet numericMetaChars1 = CharacterSet(CharacterSet::setNone, "_IbeEflmnosuxy");
-const CharacterSet numericMetaChars2 = CharacterSet(CharacterSet::setNone,"lnsy");
-std::map<int, int> numericPrefixes = { { 'b', 2 }, { 'o', 8 }, { 'x', 16 } };
-constexpr Sci_Position ZERO_LENGTH = -1;
-
 struct FSharpString {
-	Sci_Position startPos;
-	int startChar;
-	FSharpString() {
-		startPos = ZERO_LENGTH;
-		startChar = '"';
+	Sci_Position startPos = INVALID_POSITION;
+	int startChar = '"', nextChar = '\0';
+	constexpr bool HasLength() const {
+		return startPos > INVALID_POSITION;
 	}
-	inline bool HasLength() const {
-		return startPos > ZERO_LENGTH;
+	constexpr bool CanInterpolate() const {
+		return startChar == '$' || (startChar == '@' && nextChar == '$');
+	}
+	constexpr bool IsVerbatim() const {
+		return startChar == '@' || (startChar == '$' && nextChar == '@');
 	}
 };
 
@@ -175,7 +163,7 @@ public:
 				break;
 		}
 	}
-	constexpr bool AtEnd() const noexcept {
+	inline bool AtEnd() noexcept {
 		return invalid || type == Notation::none || (type != Notation::none && toEnd < 0);
 	}
 };
@@ -221,29 +209,38 @@ inline bool MatchQuotedExpressionEnd(const StyleContext &cxt) {
 	return (cxt.ch == '>' && cxt.chPrev == '@');
 }
 
-inline bool MatchStringStart(const StyleContext &cxt) {
-	return (cxt.ch == '"' || cxt.Match('@', '"') || cxt.Match('$', '"') || cxt.Match('`', '`'));
+inline bool MatchStringStart(StyleContext &cxt) {
+	return (cxt.ch == '"' || cxt.Match("@\"") || cxt.Match("$\"") || cxt.Match("@$\"") || cxt.Match("$@\"") ||
+		cxt.Match("``"));
+}
+
+inline bool FollowsEscapedBackslash(StyleContext &cxt) {
+	int count = 0;
+	for (Sci_Position offset = 1; cxt.GetRelative(-offset) == '\\'; offset++)
+		count++;
+	return count % 2 != 0;
 }
 
 inline bool MatchStringEnd(StyleContext &cxt, const FSharpString &fsStr) {
 	return (fsStr.HasLength() &&
 		// end of quoted identifier?
 		((cxt.ch == '`' && cxt.chPrev == '`') ||
-		// end of triple-quoted-string?
-		(fsStr.startChar == '"' && cxt.MatchIgnoreCase("\"\"\"")) ||
+		// end of literal or interpolated triple-quoted string?
+		 ((fsStr.startChar == '"' || (fsStr.CanInterpolate() && !(fsStr.IsVerbatim() || cxt.chPrev == '$'))) &&
+		  cxt.MatchIgnoreCase("\"\"\"")) ||
 		// end of verbatim string?
-		(fsStr.startChar == '@' &&
+		(fsStr.IsVerbatim() &&
 			// embedded quotes must be in pairs
 			cxt.ch == '"' && cxt.chNext != '"' &&
-			(cxt.chPrev != '"' || (cxt.chPrev == '"' &&
+			(cxt.chPrev != '"' ||
 				// empty verbatim string?
-				(cxt.GetRelative(-2) == '@' ||
+				((cxt.GetRelative(-2) == '@' || cxt.GetRelative(-2) == '$') ||
 				// pair of quotes at end of string?
-				(cxt.GetRelative(-2) == '"' && cxt.GetRelative(-3) != '@'))))))) ||
+				(cxt.GetRelative(-2) == '"' && !(cxt.GetRelative(-3) == '@' || cxt.GetRelative(-3) == '$'))))))) ||
 		(!fsStr.HasLength() && cxt.ch == '"' &&
-			(cxt.chPrev != '\\' ||
+			((cxt.chPrev != '\\' || (cxt.GetRelative(-2) == '\\' && !FollowsEscapedBackslash(cxt))) ||
 			// treat backslashes as char literals in verbatim strings
-			(fsStr.startChar == '@' && cxt.chPrev == '\\')));
+			(fsStr.IsVerbatim() && cxt.chPrev == '\\')));
 }
 
 inline bool MatchCharacterStart(StyleContext &cxt) {
@@ -252,30 +249,46 @@ inline bool MatchCharacterStart(StyleContext &cxt) {
 }
 
 inline bool CanEmbedQuotes(StyleContext &cxt) {
-	// allow unescaped double quotes inside verbatim and triple-quoted strings, and quoted identifiers:
+	// allow unescaped double quotes inside literal or interpolated triple-quoted strings, verbatim strings,
+	// and quoted identifiers:
 	// - https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/strings
+	// - https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/interpolated-strings#syntax
 	// - https://fsharp.org/specs/language-spec/4.1/FSharpSpec-4.1-latest.pdf#page=25&zoom=auto,-98,600
-	return cxt.MatchIgnoreCase("\"\"\"") || cxt.Match('@', '"') || cxt.Match('`', '`');
+	return cxt.Match("$\"\"\"") || cxt.Match("\"\"\"") || cxt.Match("@$\"\"\"") || cxt.Match("$@\"\"\"") ||
+	       cxt.Match('@', '"') || cxt.Match('`', '`');
 }
 
-inline bool IsNumber(StyleContext &cxt, const int base = 10) {
-	return IsADigit(cxt.ch, base) || (IsADigit(cxt.chPrev, base) && numericMetaChars1.Contains(cxt.ch)) ||
-		(IsADigit(cxt.GetRelative(-2), base) && numericMetaChars2.Contains(cxt.ch));
-}
-
-inline bool IsFloat(const StyleContext &cxt) {
-	return (cxt.ch == '.' && IsADigit(cxt.chPrev)) ||
-		((cxt.ch == '+' || cxt.ch == '-' ) && IsADigit(cxt.chNext));
+inline bool IsLineEnd(StyleContext &cxt, const Sci_Position offset) {
+	const int ch = cxt.GetRelative(offset, '\n');
+	return (ch == '\r' || ch == '\n');
 }
 
 class LexerFSharp : public DefaultLexer {
 	WordList keywords[WORDLIST_SIZE];
 	OptionsFSharp options;
 	OptionSetFSharp optionSet;
+	CharacterSet setOperators;
+	CharacterSet setFormatSpecs;
+	CharacterSet setDotNetFormatSpecs;
+	CharacterSet setFormatFlags;
+	CharacterSet numericMetaChars1;
+	CharacterSet numericMetaChars2;
+	std::map<int, int> numericPrefixes = { { 'b', 2 }, { 'o', 8 }, { 'x', 16 } };
 
 public:
-	explicit LexerFSharp() : DefaultLexer(lexerName, SCLEX_FSHARP) {
+	explicit LexerFSharp()
+	    : DefaultLexer(lexerName, SCLEX_FSHARP),
+	      setOperators(CharacterSet::setNone, "~^'-+*/%=@|&<>()[]{};,:!?"),
+	      setFormatSpecs(CharacterSet::setNone, ".%aAbBcdeEfFgGiMoOstuxX0123456789"),
+	      setDotNetFormatSpecs(CharacterSet::setNone, "cCdDeEfFgGnNpPxX"),
+	      setFormatFlags(CharacterSet::setNone, ".-+0 "),
+	      numericMetaChars1(CharacterSet::setNone, "_uU"),
+	      numericMetaChars2(CharacterSet::setNone, "fFIlLmMnsy") {
 	}
+	LexerFSharp(const LexerFSharp &) = delete;
+	LexerFSharp(LexerFSharp &&) = delete;
+	LexerFSharp &operator=(const LexerFSharp &) = delete;
+	LexerFSharp &operator=(LexerFSharp &&) = delete;
 	static ILexer5 *LexerFactoryFSharp() {
 		return new LexerFSharp();
 	}
@@ -318,28 +331,37 @@ public:
 		if (optionSet.PropertySet(&options, key, val)) {
 			return 0;
 		}
-		return ZERO_LENGTH;
+		return INVALID_POSITION;
 	}
 	Sci_Position SCI_METHOD WordListSet(int n, const char *wl) override;
 	void SCI_METHOD Lex(Sci_PositionU start, Sci_Position length, int initStyle, IDocument *pAccess) override;
 	void SCI_METHOD Fold(Sci_PositionU start, Sci_Position length, int initStyle,IDocument *pAccess) override;
+
+private:
+	inline bool IsNumber(StyleContext &cxt, const int base = 10) {
+		return IsADigit(cxt.ch, base) || (IsADigit(cxt.chPrev, base) && numericMetaChars1.Contains(cxt.ch)) ||
+		       (IsADigit(cxt.GetRelative(-2), base) && numericMetaChars2.Contains(cxt.ch));
+	}
+
+	inline bool IsFloat(StyleContext &cxt) {
+		if (cxt.MatchIgnoreCase("e+") || cxt.MatchIgnoreCase("e-")) {
+			cxt.Forward();
+			return true;
+		}
+		return ((cxt.chPrev == '.' && IsADigit(cxt.ch)) ||
+			(IsADigit(cxt.chPrev) && (cxt.ch == '.' || numericMetaChars2.Contains(cxt.ch))));
+	}
 };
 
 Sci_Position SCI_METHOD LexerFSharp::WordListSet(int n, const char *wl) {
 	WordList *wordListN = nullptr;
-	Sci_Position firstModification = ZERO_LENGTH;
+	Sci_Position firstModification = INVALID_POSITION;
 
 	if (n < WORDLIST_SIZE) {
 		wordListN = &keywords[n];
 	}
-	if (wordListN) {
-		WordList wlNew;
-		wlNew.Set(wl);
-
-		if (*wordListN != wlNew) {
-			wordListN->Set(wl);
-			firstModification = 0;
-		}
+	if (wordListN && wordListN->Set(wl)) {
+		firstModification = 0;
 	}
 	return firstModification;
 }
@@ -347,12 +369,15 @@ Sci_Position SCI_METHOD LexerFSharp::WordListSet(int n, const char *wl) {
 void SCI_METHOD LexerFSharp::Lex(Sci_PositionU start, Sci_Position length, int initStyle, IDocument *pAccess) {
 	LexAccessor styler(pAccess);
 	StyleContext sc(start, static_cast<Sci_PositionU>(length), initStyle, styler);
+	Sci_Position lineCurrent = styler.GetLine(static_cast<Sci_Position>(start));
 	Sci_PositionU cursor = 0;
 	UnicodeChar uniCh = UnicodeChar();
 	FSharpString fsStr = FSharpString();
 	constexpr Sci_Position MAX_WORD_LEN = 64;
 	constexpr int SPACE = ' ';
 	int currentBase = 10;
+	int levelNesting = (lineCurrent >= 1) ? styler.GetLineState(lineCurrent - 1) : 0;
+	bool isInterpolated = false;
 
 	while (sc.More()) {
 		Sci_PositionU colorSpan = sc.currentPos - 1;
@@ -385,14 +410,15 @@ void SCI_METHOD LexerFSharp::Lex(Sci_PositionU start, Sci_Position length, int i
 					state = SCE_FSHARP_CHARACTER;
 				} else if (MatchStringStart(sc)) {
 					fsStr.startChar = sc.ch;
-					fsStr.startPos = ZERO_LENGTH;
+					fsStr.nextChar = sc.chNext;
+					fsStr.startPos = INVALID_POSITION;
 					if (CanEmbedQuotes(sc)) {
 						// double quotes after this position should be non-terminating
 						fsStr.startPos = static_cast<Sci_Position>(sc.currentPos - cursor);
 					}
 					if (sc.ch == '`') {
 						state = SCE_FSHARP_QUOT_IDENTIFIER;
-					} else if (sc.ch == '@') {
+					} else if (fsStr.IsVerbatim()) {
 						state = SCE_FSHARP_VERBATIM;
 					} else {
 						state = SCE_FSHARP_STRING;
@@ -400,12 +426,6 @@ void SCI_METHOD LexerFSharp::Lex(Sci_PositionU start, Sci_Position length, int i
 				} else if (IsADigit(sc.ch, currentBase) ||
 					   ((sc.ch == '+' || sc.ch == '-') && IsADigit(sc.chNext))) {
 					state = SCE_FSHARP_NUMBER;
-					if (sc.ch == '0') {
-						const int prefix = sc.chNext;
-						if (numericPrefixes.find(prefix) != numericPrefixes.end()) {
-							currentBase = numericPrefixes[prefix];
-						}
-					}
 				} else if (setOperators.Contains(sc.ch) &&
 					   // don't use operator style in async keywords (e.g. `return!`)
 					   !(sc.ch == '!' && iswordstart(sc.chPrev)) &&
@@ -422,17 +442,28 @@ void SCI_METHOD LexerFSharp::Lex(Sci_PositionU start, Sci_Position length, int i
 			case SCE_FSHARP_LINENUM:
 			case SCE_FSHARP_PREPROCESSOR:
 			case SCE_FSHARP_COMMENTLINE:
-				// TestLexers.cxx will warn about splitting styles across CRLF line endings
-				// without the second condition
-				if (sc.atLineEnd || sc.ch == '\r') {
+				if (sc.MatchLineEnd()) {
 					state = SCE_FSHARP_DEFAULT;
 					advance = false;
 				}
 				break;
 			case SCE_FSHARP_COMMENT:
+				if (MatchStreamCommentStart(sc)) {
+					sc.Forward();
+					sc.ch = SPACE;
+					levelNesting++;
+				} else if (MatchStreamCommentEnd(sc)) {
+					if (levelNesting > 0)
+						levelNesting--;
+					else {
+						state = SCE_FSHARP_DEFAULT;
+						colorSpan++;
+					}
+				}
+				break;
 			case SCE_FSHARP_ATTRIBUTE:
 			case SCE_FSHARP_QUOTATION:
-				if (MatchStreamCommentEnd(sc) || MatchTypeAttributeEnd(sc) || MatchQuotedExpressionEnd(sc)) {
+				if (MatchTypeAttributeEnd(sc) || MatchQuotedExpressionEnd(sc)) {
 					state = SCE_FSHARP_DEFAULT;
 					colorSpan++;
 				}
@@ -486,6 +517,39 @@ void SCI_METHOD LexerFSharp::Lex(Sci_PositionU start, Sci_Position length, int i
 							break;
 						}
 					}
+				} else if (sc.ch == '%' &&
+					   !(fsStr.startChar == '`' || sc.MatchIgnoreCase("%  ") || sc.MatchIgnoreCase("% \"")) &&
+					   (setFormatSpecs.Contains(sc.chNext) || setFormatFlags.Contains(sc.chNext))) {
+					if (fsStr.CanInterpolate() && sc.chNext != '%') {
+						for (Sci_Position i = 2; i < length && !IsLineEnd(sc, i); i++) {
+							if (sc.GetRelative(i) == '{') {
+								state = setFormatSpecs.Contains(sc.GetRelative(i - 1))
+									    ? SCE_FSHARP_FORMAT_SPEC
+									    : state;
+								break;
+							}
+						}
+					} else {
+						state = SCE_FSHARP_FORMAT_SPEC;
+					}
+				} else if (isInterpolated) {
+					if (sc.ch == ',') {
+						// .NET alignment specifier?
+						state = (sc.chNext == '+' || sc.chNext == '-' || IsADigit(sc.chNext))
+							    ? SCE_FSHARP_FORMAT_SPEC
+							    : state;
+					} else if (sc.ch == ':') {
+						// .NET format specifier?
+						state = setDotNetFormatSpecs.Contains(sc.chNext)
+							    ? SCE_FSHARP_FORMAT_SPEC
+							    : state;
+					} else if (sc.chNext == '}') {
+						isInterpolated = false;
+						sc.Forward();
+						state = fsStr.IsVerbatim() ? SCE_FSHARP_VERBATIM : SCE_FSHARP_STRING;
+					}
+				} else if (fsStr.CanInterpolate() && sc.ch == '{') {
+					isInterpolated = true;
 				}
 				break;
 			case SCE_FSHARP_IDENTIFIER:
@@ -514,8 +578,7 @@ void SCI_METHOD LexerFSharp::Lex(Sci_PositionU start, Sci_Position length, int i
 				break;
 			case SCE_FSHARP_OPERATOR:
 				// special-case "()" and "[]" tokens as KEYWORDS - RR
-				if (setClosingTokens.Contains(sc.ch) &&
-					((sc.ch == ')' && sc.chPrev == '(') || (sc.ch == ']' && sc.chPrev == '['))) {
+				if ((sc.ch == ')' && sc.chPrev == '(') || (sc.ch == ']' && sc.chPrev == '[')) {
 					sc.ChangeState(SCE_FSHARP_KEYWORD);
 					colorSpan++;
 				} else {
@@ -524,12 +587,38 @@ void SCI_METHOD LexerFSharp::Lex(Sci_PositionU start, Sci_Position length, int i
 				state = SCE_FSHARP_DEFAULT;
 				break;
 			case SCE_FSHARP_NUMBER:
+				if ((setOperators.Contains(sc.chPrev) || IsASpaceOrTab(sc.chPrev)) && sc.ch == '0') {
+					if (numericPrefixes.find(sc.chNext) != numericPrefixes.end()) {
+						currentBase = numericPrefixes[sc.chNext];
+						sc.Forward(2);
+					}
+				} else if ((setOperators.Contains(sc.GetRelative(-2)) || IsASpaceOrTab(sc.GetRelative(-2))) &&
+					   sc.chPrev == '0') {
+					if (numericPrefixes.find(sc.ch) != numericPrefixes.end()) {
+						currentBase = numericPrefixes[sc.ch];
+						sc.Forward();
+					}
+				}
 				state = (IsNumber(sc, currentBase) || IsFloat(sc))
 					? SCE_FSHARP_NUMBER
 					// change style even when operators aren't spaced
 					: setOperators.Contains(sc.ch) ? SCE_FSHARP_OPERATOR : SCE_FSHARP_DEFAULT;
 				currentBase = (state == SCE_FSHARP_NUMBER) ? currentBase : 10;
 				break;
+			case SCE_FSHARP_FORMAT_SPEC:
+				if (!(isInterpolated && IsADigit(sc.chNext)) &&
+					(!setFormatSpecs.Contains(sc.chNext) ||
+				    !(setFormatFlags.Contains(sc.ch) || IsADigit(sc.ch)) ||
+				    (setFormatFlags.Contains(sc.ch) && sc.ch == sc.chNext))) {
+					colorSpan++;
+					state = fsStr.IsVerbatim() ? SCE_FSHARP_VERBATIM : SCE_FSHARP_STRING;
+				}
+				break;
+		}
+
+		if (sc.MatchLineEnd()) {
+			styler.SetLineState(lineCurrent++, (sc.state == SCE_FSHARP_COMMENT) ? levelNesting : 0);
+			advance = true;
 		}
 
 		if (state >= SCE_FSHARP_DEFAULT) {
@@ -545,7 +634,11 @@ void SCI_METHOD LexerFSharp::Lex(Sci_PositionU start, Sci_Position length, int i
 	sc.Complete();
 }
 
-bool LineContains(LexAccessor &styler, const char *word, const Sci_Position start, const Sci_Position end = 1);
+bool LineContains(LexAccessor &styler, const char *word, const Sci_Position start,
+		  const int chAttr = SCE_FSHARP_DEFAULT);
+
+void FoldLexicalGroup(LexAccessor &styler, int &levelNext, const Sci_Position lineCurrent, const char *word,
+		      const int chAttr);
 
 void SCI_METHOD LexerFSharp::Fold(Sci_PositionU start, Sci_Position length, int initStyle, IDocument *pAccess) {
 	if (!options.fold) {
@@ -558,8 +651,6 @@ void SCI_METHOD LexerFSharp::Fold(Sci_PositionU start, Sci_Position length, int 
 	Sci_Position lineCurrent = styler.GetLine(startPos);
 	Sci_Position lineNext = lineCurrent + 1;
 	Sci_Position lineStartNext = styler.LineStart(lineNext);
-	Sci_Position commentLinesInFold = ZERO_LENGTH;
-	Sci_Position importsInFold = ZERO_LENGTH;
 	int style = initStyle;
 	int styleNext = styler.StyleAt(startPos);
 	char chNext = styler[startPos];
@@ -575,34 +666,30 @@ void SCI_METHOD LexerFSharp::Fold(Sci_PositionU start, Sci_Position length, int 
 
 	for (Sci_PositionU i = start; i < endPos; i++) {
 		const Sci_Position currentPos = static_cast<Sci_Position>(i);
-		const bool atEOL = currentPos == (lineStartNext - 1);
+		const bool atEOL = (currentPos == (lineStartNext - 1) || styler.SafeGetCharAt(currentPos) == '\r');
+		const bool atLineOrDocEnd = (atEOL || (i == (endPos - 1)));
 		const int stylePrev = style;
 		const char ch = chNext;
-		const bool inLineComment = (style == SCE_FSHARP_COMMENTLINE);
+		const bool inLineComment = (stylePrev == SCE_FSHARP_COMMENTLINE);
 		style = styleNext;
 		styleNext = styler.StyleAt(currentPos + 1);
 		chNext = styler.SafeGetCharAt(currentPos + 1);
 
 		if (options.foldComment) {
-			if (options.foldCommentMultiLine && style == SCE_FSHARP_COMMENTLINE &&
-			    stylePrev != SCE_FSHARP_COMMENTLINE) {
-				const bool haveCommentList = LineContains(styler, "//", lineStartNext, lineNext);
-				if (haveCommentList) {
-					commentLinesInFold++;
-					if (commentLinesInFold < 1) {
-						levelNext++;
-					}
-				} else {
-					const int8_t offset = commentLinesInFold > 0 ? commentLinesInFold : 1;
-					levelNext -= offset;
-					commentLinesInFold = ZERO_LENGTH;
-				}
+			if (options.foldCommentMultiLine && inLineComment && atEOL) {
+				FoldLexicalGroup(styler, levelNext, lineCurrent, "//", SCE_FSHARP_COMMENTLINE);
 			}
 
 			if (options.foldCommentStream && style == SCE_FSHARP_COMMENT && !inLineComment) {
-				if (stylePrev != SCE_FSHARP_COMMENT) {
+				if (stylePrev != SCE_FSHARP_COMMENT ||
+				    (styler.Match(currentPos, "(*") &&
+				     !LineContains(styler, "*)", currentPos + 2, SCE_FSHARP_COMMENT))) {
 					levelNext++;
-				} else if (styleNext != SCE_FSHARP_COMMENT && !atEOL) {
+				} else if ((styleNext != SCE_FSHARP_COMMENT ||
+					    ((styler.Match(currentPos, "*)") &&
+					      !LineContains(styler, "(*", styler.LineStart(lineCurrent), SCE_FSHARP_COMMENT)) &&
+					     styler.GetLineState(lineCurrent - 1) > 0)) &&
+					   !atEOL) {
 					levelNext--;
 				}
 			}
@@ -616,25 +703,15 @@ void SCI_METHOD LexerFSharp::Fold(Sci_PositionU start, Sci_Position length, int 
 			}
 		}
 
-		if (options.foldImports && style == SCE_FSHARP_KEYWORD && LineContains(styler, "open", lineCurrent)) {
-			const bool haveImportList = LineContains(styler, "open", lineStartNext, lineNext);
-			if (haveImportList) {
-				importsInFold++;
-				if (importsInFold < 1) {
-					levelNext++;
-				}
-			} else {
-				const int8_t offset = importsInFold > 0 ? importsInFold : 1;
-				levelNext -= offset;
-				importsInFold = ZERO_LENGTH;
-			}
+		if (options.foldImports && styler.Match(currentPos, "open ") && styleNext == SCE_FSHARP_KEYWORD) {
+			FoldLexicalGroup(styler, levelNext, lineCurrent, "open ", SCE_FSHARP_KEYWORD);
 		}
 
 		if (!IsASpace(ch)) {
 			visibleChars++;
 		}
 
-		if (atEOL || (i == (endPos - 1))) {
+		if (atLineOrDocEnd) {
 			int levelUse = levelCurrent;
 			int lev = levelUse | levelNext << 16;
 
@@ -661,17 +738,31 @@ void SCI_METHOD LexerFSharp::Fold(Sci_PositionU start, Sci_Position length, int 
 	}
 }
 
-bool LineContains(LexAccessor &styler, const char *word, const Sci_Position start, const Sci_Position end) {
+bool LineContains(LexAccessor &styler, const char *word, const Sci_Position start, const int chAttr) {
 	bool found = false;
-	const Sci_Position limit = (end > 1) ? end : start;
-	for (Sci_Position i = start; i < styler.LineEnd(limit); i++) {
+	bool requireStyle = (chAttr > SCE_FSHARP_DEFAULT);
+	for (Sci_Position i = start; i < styler.LineStart(styler.GetLine(start) + 1) - 1; i++) {
 		if (styler.Match(i, word)) {
-			found = true;
+			found = requireStyle ? styler.StyleAt(i) == chAttr : true;
 			break;
 		}
 	}
 	return found;
 }
+
+void FoldLexicalGroup(LexAccessor &styler, int &levelNext, const Sci_Position lineCurrent, const char *word,
+		      const int chAttr) {
+	const Sci_Position linePrev = styler.LineStart(lineCurrent - 1);
+	const Sci_Position lineNext = styler.LineStart(lineCurrent + 1);
+	const bool follows = (lineCurrent > 0) && LineContains(styler, word, linePrev, chAttr);
+	const bool isFollowed = LineContains(styler, word, lineNext, chAttr);
+
+	if (isFollowed && !follows) {
+		levelNext++;
+	} else if (!isFollowed && follows && levelNext > SC_FOLDLEVELBASE) {
+		levelNext--;
+	}
+}
 } // namespace
 
-LexerModule lmFSharp(SCLEX_FSHARP, LexerFSharp::LexerFactoryFSharp, lexerName, fsharpWordLists);
+LexerModule lmFSharp(SCLEX_FSHARP, LexerFSharp::LexerFactoryFSharp, "fsharp", fsharpWordLists);

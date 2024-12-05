@@ -183,6 +183,8 @@ wxTextCtrl *CreateEditorTextCtrl(wxWindow *parent, const wxRect& labelRect, cons
 
 void wxDataViewColumn::Init(int width, wxAlignment align, int flags)
 {
+    m_renderer->SetOwner(this);
+
     m_width =
     m_manuallySetWidth = width;
     m_minWidth = 0;
@@ -1294,7 +1296,7 @@ wxSize wxDataViewTextRenderer::GetSize() const
         if ( m_markupText )
         {
             wxDataViewCtrl* const view = GetView();
-            wxClientDC dc(view);
+            wxInfoDC dc(view);
             if ( GetAttr().HasFont() )
                 dc.SetFont(GetAttr().GetEffectiveFont(view->GetFont()));
 
@@ -1715,8 +1717,8 @@ public:
                                         wxFRAME_FLOAT_ON_PARENT |
                                         wxFRAME_NO_TASKBAR |
                                         wxNO_BORDER );
-            new wxBitmapCanvas( m_hint, ib, ib.GetSize() );
-            m_hint->SetClientSize(ib.GetSize());
+            new wxBitmapCanvas( m_hint, ib, ib.GetLogicalSize() );
+            m_hint->SetClientSize(ib.GetLogicalSize());
             m_hint->SetTransparent(128);
             m_hint->Show();
         }
@@ -2467,7 +2469,8 @@ wxBitmap wxDataViewMainWindow::CreateItemBitmap( unsigned int row, int &indent )
     }
     width -= indent;
 
-    wxBitmap bitmap( width, height );
+    wxBitmap bitmap;
+    bitmap.CreateWithLogicalSize( width, height, GetDPIScaleFactor() );
     wxMemoryDC dc( bitmap );
     dc.SetFont( GetFont() );
     dc.SetPen( *wxBLACK_PEN );
@@ -5605,7 +5608,10 @@ wxDataViewCtrl::~wxDataViewCtrl()
 
 #if wxUSE_ACCESSIBILITY
     SetAccessible(nullptr);
-    wxAccessible::NotifyEvent(wxACC_EVENT_OBJECT_DESTROY, this, wxOBJID_CLIENT, wxACC_SELF);
+    // There is no need to notify anybody if we're destroyed as part of
+    // application shutdown and doing it would just crash in this case.
+    if ( wxTheApp )
+        wxAccessible::NotifyEvent(wxACC_EVENT_OBJECT_DESTROY, this, wxOBJID_CLIENT, wxACC_SELF);
 #endif // wxUSE_ACCESSIBILITY
 }
 

@@ -41,30 +41,33 @@
 #define DEPRECATE_DEFINITION
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 // Must have already included ILexer.h to have Scintilla::ILexer5 defined.
 using Scintilla::ILexer5;
 #else
 typedef void ILexer5;
 #endif
 
-typedef ILexer5 *(*LexerFactoryFunction)();
+typedef ILexer5 *(*LexerFactoryFunction)(void);
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace Lexilla {
 #endif
 
-typedef int (LEXILLA_CALL *GetLexerCountFn)();
+typedef int (LEXILLA_CALL *GetLexerCountFn)(void);
 typedef void (LEXILLA_CALL *GetLexerNameFn)(unsigned int Index, char *name, int buflength);
 typedef LexerFactoryFunction(LEXILLA_CALL *GetLexerFactoryFn)(unsigned int Index);
 typedef ILexer5*(LEXILLA_CALL *CreateLexerFn)(const char *name);
 /*DEPRECATE_DEFINITION*/ typedef const char *(LEXILLA_CALL *LexerNameFromIDFn)(int identifier);
-typedef const char *(LEXILLA_CALL *GetLibraryPropertyNamesFn)();
+typedef const char *(LEXILLA_CALL *GetLibraryPropertyNamesFn)(void);
 typedef void(LEXILLA_CALL *SetLibraryPropertyFn)(const char *key, const char *value);
+typedef const char *(LEXILLA_CALL *GetNameSpaceFn)(void);
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
+
+#define LEXILLA_NAMESPACE_SEPARATOR '.'
 
 #define LEXILLA_GETLEXERCOUNT "GetLexerCount"
 #define LEXILLA_GETLEXERNAME "GetLexerName"
@@ -73,23 +76,33 @@ typedef void(LEXILLA_CALL *SetLibraryPropertyFn)(const char *key, const char *va
 #define LEXILLA_LEXERNAMEFROMID "LexerNameFromID"
 #define LEXILLA_GETLIBRARYPROPERTYNAMES "GetLibraryPropertyNames"
 #define LEXILLA_SETLIBRARYPROPERTY "SetLibraryProperty"
+#define LEXILLA_GETNAMESPACE "GetNameSpace"
 
 // Static linking prototypes
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 ILexer5 * LEXILLA_CALL CreateLexer(const char *name);
-int LEXILLA_CALL GetLexerCount();
+int LEXILLA_CALL GetLexerCount(void);
 void LEXILLA_CALL GetLexerName(unsigned int index, char *name, int buflength);
 LexerFactoryFunction LEXILLA_CALL GetLexerFactory(unsigned int index);
 /*DEPRECATE_DEFINITION*/ const char *LEXILLA_CALL LexerNameFromID(int identifier);
-const char * LEXILLA_CALL GetLibraryPropertyNames();
+const char * LEXILLA_CALL GetLibraryPropertyNames(void);
 void LEXILLA_CALL SetLibraryProperty(const char *key, const char *value);
+const char *LEXILLA_CALL GetNameSpace(void);
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
+#endif
+
+#if defined(__cplusplus)
+namespace Lexilla {
+	class LexerModule;
+}
+// Add a static lexer (in the same binary) to Lexilla's list
+void AddStaticLexerModule(Lexilla::LexerModule *plm);
 #endif
 
 #endif

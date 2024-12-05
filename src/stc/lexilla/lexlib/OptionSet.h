@@ -10,7 +10,9 @@
 #ifndef OPTIONSET_H
 #define OPTIONSET_H
 
-namespace Scintilla {
+#include "LexillaCompat.h"
+
+namespace Lexilla {
 
 template <typename T>
 class OptionSet {
@@ -28,22 +30,22 @@ class OptionSet {
 		std::string value;
 		std::string description;
 		Option() :
-			opType(SC_TYPE_BOOLEAN), pb(0), description("") {
+			opType(SC_TYPE_BOOLEAN), pb(nullptr) {
 		}
-		Option(plcob pb_, std::string description_="") :
+		Option(plcob pb_, std::string const& description_="") :
 			opType(SC_TYPE_BOOLEAN), pb(pb_), description(description_) {
 		}
-		Option(plcoi pi_, std::string description_) :
+		Option(plcoi pi_, std::string const& description_) :
 			opType(SC_TYPE_INTEGER), pi(pi_), description(description_) {
 		}
-		Option(plcos ps_, std::string description_) :
+		Option(plcos ps_, std::string const& description_) :
 			opType(SC_TYPE_STRING), ps(ps_), description(description_) {
 		}
 		bool Set(T *base, const char *val) {
 			value = val;
 			switch (opType) {
 			case SC_TYPE_BOOLEAN: {
-					bool option = atoi(val) != 0;
+					const bool option = atoi(val) != 0;
 					if ((*base).*pb != option) {
 						(*base).*pb = option;
 						return true;
@@ -51,7 +53,7 @@ class OptionSet {
 					break;
 				}
 			case SC_TYPE_INTEGER: {
-					int option = atoi(val);
+					const int option = atoi(val);
 					if ((*base).*pi != option) {
 						(*base).*pi = option;
 						return true;
@@ -65,6 +67,8 @@ class OptionSet {
 					}
 					break;
 				}
+			default:
+				break;
 			}
 			return false;
 		}
@@ -72,7 +76,7 @@ class OptionSet {
 			return value.c_str();
 		}
 	};
-	typedef std::map<std::string, Option> OptionMap;
+	typedef std::map<std::string, Option, std::less<std::string>> OptionMap;
 	OptionMap nameToDef;
 	std::string names;
 	std::string wordLists;
@@ -83,30 +87,43 @@ class OptionSet {
 		names += name;
 	}
 public:
-	void DefineProperty(const char *name, plcob pb, std::string description="") {
+	void DefineProperty(const char *name, plcob pb, std::string const& description="") {
 		nameToDef[name] = Option(pb, description);
 		AppendName(name);
 	}
-	void DefineProperty(const char *name, plcoi pi, std::string description="") {
+	void DefineProperty(const char *name, plcoi pi, std::string const& description="") {
 		nameToDef[name] = Option(pi, description);
 		AppendName(name);
 	}
-	void DefineProperty(const char *name, plcos ps, std::string description="") {
+	void DefineProperty(const char *name, plcos ps, std::string const& description="") {
 		nameToDef[name] = Option(ps, description);
+		AppendName(name);
+	}
+	template <typename E>
+	void DefineProperty(const char *name, E T::*pe, std::string const& description="") {
+#if wxCHECK_CXX_STD(201703L)
+		static_assert(std::is_enum<E>::value);
+#endif
+		plcoi pi {};
+#if wxCHECK_CXX_STD(201703L)
+		static_assert(sizeof(pe) == sizeof(pi));
+#endif
+		memcpy(&pi, &pe, sizeof(pe));
+		nameToDef[name] = Option(pi, description);
 		AppendName(name);
 	}
 	const char *PropertyNames() const noexcept {
 		return names.c_str();
 	}
-	int PropertyType(const char *name) {
-		typename OptionMap::iterator it = nameToDef.find(name);
+	int PropertyType(const char *name) const {
+		typename OptionMap::const_iterator const it = nameToDef.find(name);
 		if (it != nameToDef.end()) {
 			return it->second.opType;
 		}
 		return SC_TYPE_BOOLEAN;
 	}
-	const char *DescribeProperty(const char *name) {
-		typename OptionMap::iterator it = nameToDef.find(name);
+	const char *DescribeProperty(const char *name) const {
+		typename OptionMap::const_iterator const it = nameToDef.find(name);
 		if (it != nameToDef.end()) {
 			return it->second.description.c_str();
 		}
@@ -114,15 +131,15 @@ public:
 	}
 
 	bool PropertySet(T *base, const char *name, const char *val) {
-		typename OptionMap::iterator it = nameToDef.find(name);
+		typename OptionMap::iterator const it = nameToDef.find(name);
 		if (it != nameToDef.end()) {
 			return it->second.Set(base, val);
 		}
 		return false;
 	}
 
-	const char *PropertyGet(const char *name) {
-		typename OptionMap::iterator it = nameToDef.find(name);
+	const char *PropertyGet(const char *name) const {
+		typename OptionMap::const_iterator const it = nameToDef.find(name);
 		if (it != nameToDef.end()) {
 			return it->second.Get();
 		}
@@ -132,7 +149,7 @@ public:
 	void DefineWordListSets(const char * const wordListDescriptions[]) {
 		if (wordListDescriptions) {
 			for (size_t wl = 0; wordListDescriptions[wl]; wl++) {
-				if (!wordLists.empty())
+				if (wl > 0)
 					wordLists += "\n";
 				wordLists += wordListDescriptions[wl];
 			}

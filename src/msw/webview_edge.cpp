@@ -265,6 +265,10 @@ public:
 #ifdef __VISUALC__
         m_webViewEnvironmentOptions = Make<CoreWebView2EnvironmentOptions>().Get();
         m_webViewEnvironmentOptions->put_Language(wxUILocale::GetCurrent().GetLocaleId().GetName().wc_str());
+
+        wxCOMPtr<ICoreWebView2EnvironmentOptions3> options3;
+        if (SUCCEEDED(m_webViewEnvironmentOptions->QueryInterface(IID_PPV_ARGS(&options3))))
+            options3->put_IsCustomCrashReportingEnabled(false);
 #endif
     }
 
@@ -291,6 +295,12 @@ public:
 
     virtual void SetDataPath(const wxString& path) override { m_dataPath = path;}
     virtual wxString GetDataPath() const override { return m_dataPath; }
+
+    virtual bool EnablePersistentStorage(bool enable) override
+    {
+        m_persistentStorage = enable;
+        return true;
+    }
 
     bool CreateOrGetEnvironment(wxWebViewEdgeImpl* impl)
     {
@@ -332,6 +342,7 @@ public:
     wxCOMPtr<ICoreWebView2EnvironmentOptions> m_webViewEnvironmentOptions;
     wxCOMPtr<ICoreWebView2Environment> m_webViewEnvironment;
     wxString m_dataPath;
+    bool m_persistentStorage = true;
 };
 
 wxString wxWebViewConfigurationImplEdge::ms_browserExecutableDir;
@@ -470,10 +481,27 @@ bool wxWebViewEdgeImpl::Create()
 void wxWebViewEdgeImpl::EnvironmentAvailable(ICoreWebView2Environment* environment)
 {
     environment->QueryInterface(IID_PPV_ARGS(&m_webViewEnvironment));
-    m_webViewEnvironment->CreateCoreWebView2Controller(
-        m_ctrl->GetHWND(),
-        Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
-            this, &wxWebViewEdgeImpl::OnWebViewCreated).Get());
+    wxCOMPtr<ICoreWebView2Environment10> environment10;
+    if (SUCCEEDED(m_webViewEnvironment->QueryInterface(IID_PPV_ARGS(&environment10))))
+    {
+        wxCOMPtr<ICoreWebView2ControllerOptions> controllerOptions;
+        if (SUCCEEDED(environment10->CreateCoreWebView2ControllerOptions(&controllerOptions)))
+        {
+            auto config = static_cast<wxWebViewConfigurationImplEdge*>(m_config.GetImpl());
+            controllerOptions->put_IsInPrivateModeEnabled(config->m_persistentStorage ? FALSE : TRUE);
+
+            environment10->CreateCoreWebView2ControllerWithOptions(
+                m_ctrl->GetHWND(),
+                controllerOptions.get(),
+                Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
+                    this, &wxWebViewEdgeImpl::OnWebViewCreated).Get());
+        }
+    }
+    else
+        m_webViewEnvironment->CreateCoreWebView2Controller(
+            m_ctrl->GetHWND(),
+            Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
+                this, &wxWebViewEdgeImpl::OnWebViewCreated).Get());
 }
 
 bool wxWebViewEdgeImpl::Initialize()
@@ -620,6 +648,8 @@ HRESULT wxWebViewEdgeImpl::OnNavigationCompleted(ICoreWebView2* WXUNUSED(sender)
                 WX_ERROR2_CASE(COREWEBVIEW2_WEB_ERROR_STATUS_HOST_NAME_NOT_RESOLVED, wxWEBVIEW_NAV_ERR_CONNECTION)
                 WX_ERROR2_CASE(COREWEBVIEW2_WEB_ERROR_STATUS_REDIRECT_FAILED, wxWEBVIEW_NAV_ERR_OTHER)
                 WX_ERROR2_CASE(COREWEBVIEW2_WEB_ERROR_STATUS_UNEXPECTED_ERROR, wxWEBVIEW_NAV_ERR_OTHER)
+                WX_ERROR2_CASE(COREWEBVIEW2_WEB_ERROR_STATUS_VALID_AUTHENTICATION_CREDENTIALS_REQUIRED, wxWEBVIEW_NAV_ERR_AUTH)
+                WX_ERROR2_CASE(COREWEBVIEW2_WEB_ERROR_STATUS_VALID_PROXY_AUTHENTICATION_REQUIRED, wxWEBVIEW_NAV_ERR_AUTH)
             case COREWEBVIEW2_WEB_ERROR_STATUS_OPERATION_CANCELED:
                 // This status is triggered by vetoing a wxEVT_WEBVIEW_NAVIGATING event
                 ignoreStatus = true;
@@ -820,6 +850,7 @@ HRESULT wxWebViewEdgeImpl::OnWebViewCreated(HRESULT result, ICoreWebView2Control
     m_initialized = true;
     UpdateBounds();
     m_webViewController->put_IsVisible(true);
+    m_ctrl->NotifyWebViewCreated();
 
     // Connect and handle the various WebView events
     m_webView->add_NavigationStarting(
@@ -902,6 +933,10 @@ HRESULT wxWebViewEdgeImpl::OnWebViewCreated(HRESULT result, ICoreWebView2Control
     if (settings)
     {
         settings->put_IsStatusBarEnabled(false);
+
+        wxCOMPtr<ICoreWebView2Settings8> settings8;
+        if (SUCCEEDED(settings->QueryInterface(IID_PPV_ARGS(&settings8))))
+            settings8->put_IsReputationCheckingRequired(false);
     }
     UpdateWebMessageHandler();
 
@@ -1048,8 +1083,6 @@ bool wxWebViewEdge::Create(wxWindow* parent,
     wxWindow* topLevelParent = wxGetTopLevelParent(this);
     if (topLevelParent)
         topLevelParent->Bind(wxEVT_ICONIZE, &wxWebViewEdge::OnTopLevelParentIconized, this);
-
-    NotifyWebViewCreated();
 
     LoadURL(url);
     return true;
@@ -1311,6 +1344,18 @@ void wxWebViewEdge::EnableAccessToDevTools(bool enable)
         m_impl->m_pendingAccessToDevToolsEnabled = enable ? 1 : 0;
 }
 
+bool wxWebViewEdge::ShowDevTools()
+{
+    const HRESULT hr = m_impl->m_webView->OpenDevToolsWindow();
+    if ( FAILED(hr) )
+    {
+        wxLogApiError("ICoreWebView2::OpenDevToolsWindow", hr);
+        return false;
+    }
+
+    return true;
+}
+
 bool wxWebViewEdge::IsAccessToDevToolsEnabled() const
 {
     wxCOMPtr<ICoreWebView2Settings> settings(m_impl->GetSettings());
@@ -1541,32 +1586,42 @@ bool wxWebViewFactoryEdge::IsAvailable()
     return wxWebViewEdgeImpl::Initialize();
 }
 
-wxVersionInfo wxWebViewFactoryEdge::GetVersionInfo()
+wxVersionInfo wxWebViewFactoryEdge::GetVersionInfo(wxVersionContext context)
 {
-    long major = 0,
-         minor = 0,
-         micro = 0,
-         revision = 0;
-
-    if (wxWebViewEdgeImpl::Initialize())
+    switch ( context )
     {
-        wxCoTaskMemPtr<wchar_t> nativeVersionStr;
-        HRESULT hr = wxGetAvailableCoreWebView2BrowserVersionString(
-            wxWebViewConfigurationImplEdge::ms_browserExecutableDir.wc_str(), &nativeVersionStr);
-        if (SUCCEEDED(hr) && nativeVersionStr)
-        {
-            wxStringTokenizer tk(wxString(nativeVersionStr), ". ");
-            // Ignore the return value because if the version component is missing
-            // or invalid (i.e. non-numeric), the only thing we can do is to ignore
-            // it anyhow.
-            tk.GetNextToken().ToLong(&major);
-            tk.GetNextToken().ToLong(&minor);
-            tk.GetNextToken().ToLong(&micro);
-            tk.GetNextToken().ToLong(&revision);
-        }
+        case wxVersionContext::BuildTime:
+            // There is no build-time version for this backend.
+            break;
+
+        case wxVersionContext::RunTime:
+            long major = 0,
+                 minor = 0,
+                 micro = 0,
+                 revision = 0;
+
+            if (wxWebViewEdgeImpl::Initialize())
+            {
+                wxCoTaskMemPtr<wchar_t> nativeVersionStr;
+                HRESULT hr = wxGetAvailableCoreWebView2BrowserVersionString(
+                    wxWebViewConfigurationImplEdge::ms_browserExecutableDir.wc_str(), &nativeVersionStr);
+                if (SUCCEEDED(hr) && nativeVersionStr)
+                {
+                    wxStringTokenizer tk(wxString(nativeVersionStr), ". ");
+                    // Ignore the return value because if the version component is missing
+                    // or invalid (i.e. non-numeric), the only thing we can do is to ignore
+                    // it anyhow.
+                    tk.GetNextToken().ToLong(&major);
+                    tk.GetNextToken().ToLong(&minor);
+                    tk.GetNextToken().ToLong(&micro);
+                    tk.GetNextToken().ToLong(&revision);
+                }
+            }
+
+            return wxVersionInfo("Microsoft Edge WebView2", major, minor, micro, revision);
     }
 
-    return wxVersionInfo("Microsoft Edge WebView2", major, minor, micro, revision);
+    return {};
 }
 
 wxWebViewConfiguration wxWebViewFactoryEdge::CreateConfiguration()

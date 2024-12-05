@@ -96,7 +96,6 @@ public:
                 const wxArrayLong& timess,
                 const wxString& caption,
                 long style);
-    virtual ~wxLogDialog();
 
     // event handlers
     void OnOk(wxCommandEvent& event);
@@ -209,18 +208,24 @@ public:
 // members and so its constructor and destructor are trivial.
 LogFlushHook gs_logFlushHook;
 
+// Registration count, just in case the application creates more than one
+// wxLogGui instance (which is unusual but can still happen).
+int gs_logFlushHookRegistrationCount = 0;
+
 } // anonymous namespace
 
 wxLogGui::wxLogGui()
 {
-    gs_logFlushHook.Register();
+    if ( !gs_logFlushHookRegistrationCount++ )
+        gs_logFlushHook.Register();
 
     Clear();
 }
 
 wxLogGui::~wxLogGui()
 {
-    gs_logFlushHook.Unregister();
+    if ( !--gs_logFlushHookRegistrationCount )
+        gs_logFlushHook.Unregister();
 }
 
 void wxLogGui::Clear()
@@ -770,6 +775,8 @@ wxLogDialog::wxLogDialog(wxWindow *parent,
 #else
     wxPanel* win = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                                wxBORDER_NONE);
+
+    sizerTop->Add(win, wxSizerFlags(1).Expand().Border());
 #endif
     wxSizer * const paneSz = new wxBoxSizer(wxVERTICAL);
 
@@ -829,11 +836,8 @@ void wxLogDialog::CreateDetailsControls(wxWindow *parent)
     if (hasTimeStamp)
         m_listctrl->InsertColumn(1, wxT("Time"));
 
-    // prepare the imagelist
-    wxSize iconSize(16, 16);
-    iconSize *= parent->GetDPIScaleFactor();
-
-    wxImageList *imageList = new wxImageList(iconSize.x, iconSize.y);
+    // prepare the images
+    wxVector<wxBitmapBundle> images;
 
     // order should be the same as in the switch below!
     static wxString const icons[] =
@@ -843,52 +847,30 @@ void wxLogDialog::CreateDetailsControls(wxWindow *parent)
         wxART_INFORMATION
     };
 
-    bool loadedIcons = true;
-
-    for ( size_t icon = 0; icon < WXSIZEOF(icons); icon++ )
+    for ( const auto& icon: icons )
     {
-        wxBitmap bmp = wxArtProvider::GetBitmap(icons[icon], wxART_MESSAGE_BOX,
-                                                iconSize);
-
-        // This may very well fail if there are insufficient colours available.
-        // Degrade gracefully.
-        if ( !bmp.IsOk() )
-        {
-            loadedIcons = false;
-
-            break;
-        }
-
-        imageList->Add(bmp);
+        images.push_back(wxArtProvider::GetBitmapBundle(icon, wxART_LIST));
     }
 
-    m_listctrl->SetImageList(imageList, wxIMAGE_LIST_SMALL);
+    m_listctrl->SetSmallImages(images);
 
     // fill the listctrl
     size_t count = m_messages.GetCount();
     for ( size_t n = 0; n < count; n++ )
     {
         int image;
-
-        if ( loadedIcons )
+        switch ( m_severity[n] )
         {
-            switch ( m_severity[n] )
-            {
-                case wxLOG_Error:
-                    image = 0;
-                    break;
+            case wxLOG_Error:
+                image = 0;
+                break;
 
-                case wxLOG_Warning:
-                    image = 1;
-                    break;
+            case wxLOG_Warning:
+                image = 1;
+                break;
 
-                default:
-                    image = 2;
-            }
-        }
-        else // failed to load images
-        {
-            image = -1;
+            default:
+                image = 2;
         }
 
         wxString msg = m_messages[n];
@@ -1007,14 +989,6 @@ void wxLogDialog::OnSave(wxCommandEvent& WXUNUSED(event))
 
 #endif // CAN_SAVE_FILES
 
-wxLogDialog::~wxLogDialog()
-{
-    if ( m_listctrl )
-    {
-        delete m_listctrl->GetImageList(wxIMAGE_LIST_SMALL);
-    }
-}
-
 #endif // wxUSE_LOG_DIALOG
 
 #if CAN_SAVE_FILES
@@ -1028,7 +1002,7 @@ static int OpenLogFile(wxFile& file, wxString *pFilename, wxWindow *parent)
     // get the file name
     // -----------------
     wxString filename = wxSaveFileSelector(wxT("log"), wxT("txt"), wxT("log.txt"), parent);
-    if ( !filename ) {
+    if ( filename.empty() ) {
         // cancelled
         return -1;
     }

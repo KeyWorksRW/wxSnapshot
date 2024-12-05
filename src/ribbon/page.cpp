@@ -36,7 +36,7 @@ static int GetSizeInOrientation(wxSize size, wxOrientation orientation);
 class wxRibbonPageScrollButton : public wxRibbonControl
 {
 public:
-    wxRibbonPageScrollButton(wxRibbonPage* sibling,
+    explicit wxRibbonPageScrollButton(wxRibbonPage* sibling,
                  wxWindowID id = wxID_ANY,
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
@@ -54,7 +54,7 @@ protected:
     void OnMouseDown(wxMouseEvent& evt);
     void OnMouseUp(wxMouseEvent& evt);
 
-    wxRibbonPage* m_sibling;
+    wxRibbonPage* m_sibling = nullptr;
     long m_flags;
 
     wxDECLARE_CLASS(wxRibbonPageScrollButton);
@@ -751,11 +751,11 @@ bool wxRibbonPage::DoActualLayout()
         child->SetSize(origin.x, origin.y, w, h);
         if(major_axis == wxHORIZONTAL)
         {
-            origin.x += w + gap;
+            origin.x += w + (child->IsShown() ? gap : 0);
         }
         else
         {
-            origin.y += h + gap;
+            origin.y += h + (child->IsShown() ? gap : 0);
         }
     }
 
@@ -1100,6 +1100,56 @@ bool wxRibbonPage::CollapsePanels(wxOrientation direction, int minimum_amount)
         }
     }
     return minimum_amount <= 0;
+}
+
+wxRibbonPanel* wxRibbonPage::GetPanel(int n)
+{
+    int currentPanelIndex = 0;
+    for ( wxWindowList::compatibility_iterator node = GetChildren().GetFirst();
+          node;
+          node = node->GetNext() )
+    {
+        wxRibbonPanel* panel = wxDynamicCast(node->GetData(), wxRibbonPanel);
+        if ( panel != nullptr )
+        {
+            if ( n == currentPanelIndex )
+            {
+                return panel;
+            }
+            ++currentPanelIndex;
+        }
+    }
+    return nullptr;
+}
+
+wxRibbonPanel* wxRibbonPage::GetPanelById(wxWindowID id)
+{
+    for ( wxWindowList::compatibility_iterator node = GetChildren().GetFirst();
+          node;
+          node = node->GetNext() )
+    {
+        wxRibbonPanel* panel = wxDynamicCast(node->GetData(), wxRibbonPanel);
+        if ( panel != nullptr && panel->GetId() == id )
+        {
+            return panel;
+        }
+    }
+    return nullptr;
+}
+
+size_t wxRibbonPage::GetPanelCount() const
+{
+    size_t panelCount = 0;
+    for ( wxWindowList::compatibility_iterator node = GetChildren().GetFirst();
+          node;
+          node = node->GetNext() )
+    {
+        if ( node->GetData()->IsKindOf(CLASSINFO(wxRibbonPanel)) )
+        {
+            ++panelCount;
+        }
+    }
+    return panelCount;
 }
 
 bool wxRibbonPage::DismissExpandedPanel()

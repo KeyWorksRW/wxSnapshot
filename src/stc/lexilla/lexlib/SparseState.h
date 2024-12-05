@@ -10,14 +10,15 @@
 #ifndef SPARSESTATE_H
 #define SPARSESTATE_H
 
-namespace Scintilla {
+namespace Lexilla {
 
 template <typename T>
 class SparseState {
 	struct State {
 		Sci_Position position;
 		T value;
-		State(Sci_Position position_, T value_) noexcept : position(position_), value(value_) {
+		State(Sci_Position position_, T value_) noexcept :
+			position(position_), value(std::move(value_)) {
 		}
 		inline bool operator<(const State &other) const noexcept {
 			return position < other.position;

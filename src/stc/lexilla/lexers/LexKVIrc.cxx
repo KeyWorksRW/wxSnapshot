@@ -15,6 +15,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <string>
+
 #include "ILexer.h"
 #include "Scintilla.h"
 #include "SciLexer.h"
@@ -23,10 +25,10 @@
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 
 /* KVIrc Script syntactic rules: http://www.kvirc.net/doc/doc_syntactic_rules.html */
@@ -124,7 +126,7 @@ static void ColouriseKVIrcDoc(Sci_PositionU startPos, Sci_Position length,
                 }
 
                 /* Detecting numbers - isdigit is unsafe as it does not
-                 * validate, use CharacterSet.h functions */
+                 * validate, use LexCharacterSet.h functions */
                 if (IsADigit(sc.ch))
                 {
                     sc.SetState(SCE_KVIRC_NUMBER);

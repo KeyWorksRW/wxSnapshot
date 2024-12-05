@@ -27,6 +27,7 @@
 
 
 class wxAuiNotebook;
+class wxAuiTabFrame;
 
 
 enum wxAuiNotebookOption
@@ -87,13 +88,13 @@ private:
 class WXDLLIMPEXP_AUI wxAuiNotebookPage
 {
 public:
-    wxWindow* window;     // page's associated window
+    wxWindow* window = nullptr; // page's associated window
     wxString caption;     // caption displayed on the tab
     wxString tooltip;     // tooltip displayed when hovering over tab title
     wxBitmapBundle bitmap;// tab's bitmap
     wxRect rect;          // tab's hit rectangle
-    bool active;          // true if the page is currently active
-    bool hover;           // true if mouse hovering over tab
+    bool active = false;  // true if the page is currently active
+    bool hover = false;   // true if mouse hovering over tab
 };
 
 class WXDLLIMPEXP_AUI wxAuiTabContainerButton
@@ -152,7 +153,7 @@ public:
     size_t GetPageCount() const;
     wxAuiNotebookPage& GetPage(size_t idx);
     const wxAuiNotebookPage& GetPage(size_t idx) const;
-    wxAuiNotebookPageArray& GetPages();
+    const wxAuiNotebookPageArray& GetPages() const;
     void SetNormalFont(const wxFont& normalFont);
     void SetSelectedFont(const wxFont& selectedFont);
     void SetMeasuringFont(const wxFont& measuringFont);
@@ -171,7 +172,7 @@ public:
     void SetTabOffset(size_t offset);
 
     // Is the tab visible?
-    bool IsTabVisible(int tabPage, int tabOffset, wxDC* dc, wxWindow* wnd);
+    bool IsTabVisible(int tabPage, int tabOffset, wxReadOnlyDC* dc, wxWindow* wnd);
 
     // Make the tab visible if it wasn't already
     void MakeTabVisible(int tabPage, wxWindow* win);
@@ -334,6 +335,8 @@ public:
 
     const wxAuiManager& GetAuiManager() const { return m_mgr; }
 
+    void SetManagerFlags(unsigned int flags) { m_mgr.SetFlags(flags); }
+
     // Sets the normal font
     void SetNormalFont(const wxFont& font);
 
@@ -354,12 +357,6 @@ public:
 
     // Shows the window menu
     bool ShowWindowMenu();
-
-    // we do have multiple pages
-    virtual bool HasMultiplePages() const override { return true; }
-
-    // we don't want focus for ourselves
-    // virtual bool AcceptsFocus() const { return false; }
 
     //wxBookCtrlBase functions
 
@@ -434,6 +431,7 @@ protected:
     void OnTabBgDClick(wxAuiNotebookEvent& evt);
     void OnNavigationKeyNotebook(wxNavigationKeyEvent& event);
     void OnSysColourChanged(wxSysColourChangedEvent& event);
+    void OnDpiChanged(wxDPIChangedEvent& event);
 
     // set selection to the given window (which must be non-null and be one of
     // our pages, otherwise an assert is raised)
@@ -459,6 +457,10 @@ protected:
 
     int m_lastDragX;
     unsigned int m_flags;
+
+private:
+    // Create a new tab frame, containing a new wxAuiTabCtrl.
+    wxAuiTabFrame* CreateTabFrame(wxSize size = wxSize());
 
 #ifndef SWIG
     wxDECLARE_CLASS(wxAuiNotebook);

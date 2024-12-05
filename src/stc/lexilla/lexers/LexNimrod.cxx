@@ -3,6 +3,7 @@
 // (c) 2009 Andreas Rumpf
 /** @file LexNimrod.cxx
  ** Lexer for Nimrod.
+ ** This lexer has been superceded by the "nim" lexer in LexNim.cxx.
  **/
 // Copyright 1998-2002 by Neil Hodgson <neilh@scintilla.org>
 // The License.txt file describes the conditions under which this software may be distributed.
@@ -14,6 +15,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <string>
+
 #include "ILexer.h"
 #include "Scintilla.h"
 #include "SciLexer.h"
@@ -22,10 +25,10 @@
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 static inline bool IsAWordChar(int ch) {
 	return (ch >= 0x80) || isalnum(ch) || ch == '_';

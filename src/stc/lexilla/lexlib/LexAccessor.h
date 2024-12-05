@@ -8,13 +8,13 @@
 #ifndef LEXACCESSOR_H
 #define LEXACCESSOR_H
 
-namespace Scintilla {
+namespace Lexilla {
 
 enum class EncodingType { eightBit, unicode, dbcs };
 
 class LexAccessor {
 private:
-	IDocument *pAccess;
+	Scintilla::IDocument *pAccess;
 	enum {extremePosition=0x7FFFFFFF};
 	/** @a bufferSize is a trade off between time taken to copy the characters
 	 * and retrieval overhead.
@@ -48,7 +48,7 @@ private:
 	}
 
 public:
-	explicit LexAccessor(IDocument *pAccess_) :
+	explicit LexAccessor(Scintilla::IDocument *pAccess_) :
 		pAccess(pAccess_), startPos(extremePosition), endPos(0),
 		codePage(pAccess->CodePage()),
 		encodingType(EncodingType::eightBit),
@@ -69,6 +69,9 @@ public:
 		case 950:
 		case 1361:
 			encodingType = EncodingType::dbcs;
+			break;
+		default:
+			break;
 		}
 	}
 	char operator[](Sci_Position position) {
@@ -77,7 +80,7 @@ public:
 		}
 		return buf[position - startPos];
 	}
-	IDocument *MultiByteAccess() const noexcept {
+	Scintilla::IDocument *MultiByteAccess() const noexcept {
 		return pAccess;
 	}
 	/** Safe version of operator[], returning a defined value for invalid position. */
@@ -92,12 +95,17 @@ public:
 		return buf[position - startPos];
 	}
 	bool IsLeadByte(char ch) const {
-		return pAccess->IsDBCSLeadByte(ch);
+		const unsigned char uch = ch;
+		return
+			(uch >= 0x80) &&	// non-ASCII
+			(encodingType == EncodingType::dbcs) &&		// IsDBCSLeadByte only for DBCS
+			pAccess->IsDBCSLeadByte(ch);
 	}
 	EncodingType Encoding() const noexcept {
 		return encodingType;
 	}
 	bool Match(Sci_Position pos, const char *s) {
+		assert(s);
 		for (int i=0; *s; i++) {
 			if (*s != SafeGetCharAt(pos+i))
 				return false;
@@ -105,8 +113,32 @@ public:
 		}
 		return true;
 	}
+	bool MatchIgnoreCase(Sci_Position pos, const char *s);
+
+	// Get first len - 1 characters in range [startPos_, endPos_).
+	void GetRange(Sci_PositionU startPos_, Sci_PositionU endPos_, char *s, Sci_PositionU len);
+	void GetRangeLowered(Sci_PositionU startPos_, Sci_PositionU endPos_, char *s, Sci_PositionU len);
+	// Get all characters in range [startPos_, endPos_).
+	std::string GetRange(Sci_PositionU startPos_, Sci_PositionU endPos_);
+	std::string GetRangeLowered(Sci_PositionU startPos_, Sci_PositionU endPos_);
+
 	char StyleAt(Sci_Position position) const {
 		return pAccess->StyleAt(position);
+	}
+	int StyleIndexAt(Sci_Position position) const {
+		const unsigned char style = pAccess->StyleAt(position);
+		return style;
+	}
+	// Return style value from buffer when in buffer, else retrieve from document.
+	// This is faster and can avoid calls to Flush() as that may be expensive.
+	int BufferStyleAt(Sci_Position position) const {
+		const Sci_Position index = position - startPosStyling;
+		if (index >= 0 && index < validLen) {
+			const unsigned char style = styleBuf[index];
+			return style;
+		}
+		const unsigned char style = pAccess->StyleAt(position);
+		return style;
 	}
 	Sci_Position GetLine(Sci_Position position) const {
 		return pAccess->LineFromPosition(position);
@@ -120,7 +152,7 @@ public:
 	int LevelAt(Sci_Position line) const {
 		return pAccess->GetLevel(line);
 	}
-	Sci_Position Length() const {
+	Sci_Position Length() const noexcept {
 		return lenDoc;
 	}
 	void Flush() {
@@ -141,10 +173,10 @@ public:
 		pAccess->StartStyling(start);
 		startPosStyling = start;
 	}
-	Sci_PositionU GetStartSegment() const {
+	Sci_PositionU GetStartSegment() const noexcept {
 		return startSeg;
 	}
-	void StartSegment(Sci_PositionU pos) {
+	void StartSegment(Sci_PositionU pos) noexcept {
 		startSeg = pos;
 	}
 	void ColourTo(Sci_PositionU pos, int chAttr) {
@@ -157,7 +189,7 @@ public:
 
 			if (validLen + (pos - startSeg + 1) >= bufferSize)
 				Flush();
-			const char attr = static_cast<char>(chAttr);
+			const unsigned char attr = chAttr & 0xffU;
 			if (validLen + (pos - startSeg + 1) >= bufferSize) {
 				// Too big for buffer so send directly
 				pAccess->SetStyleFor(pos - startSeg + 1, attr);

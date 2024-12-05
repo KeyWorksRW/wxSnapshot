@@ -9,6 +9,8 @@
 #include <cassert>
 #include <cstring>
 
+#include <string>
+
 #include "ILexer.h"
 #include "Scintilla.h"
 #include "SciLexer.h"
@@ -20,7 +22,7 @@
 #include "LexerModule.h"
 #include "DefaultLexer.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 static const char styleSubable[] = { 0 };
 
@@ -32,15 +34,14 @@ DefaultLexer::DefaultLexer(const char *languageName_, int language_,
 	nClasses(nClasses_) {
 }
 
-DefaultLexer::~DefaultLexer() {
-}
+DefaultLexer::~DefaultLexer() = default;
 
 void SCI_METHOD DefaultLexer::Release() {
 	delete this;
 }
 
 int SCI_METHOD DefaultLexer::Version() const {
-	return lvRelease5;
+	return Scintilla::lvRelease5;
 }
 
 const char * SCI_METHOD DefaultLexer::PropertyNames() {
@@ -67,7 +68,7 @@ Sci_Position SCI_METHOD DefaultLexer::WordListSet(int, const char *) {
 	return -1;
 }
 
-void SCI_METHOD DefaultLexer::Fold(Sci_PositionU, Sci_Position, int, IDocument *) {
+void SCI_METHOD DefaultLexer::Fold(Sci_PositionU, Sci_Position, int, Scintilla::IDocument *) {
 }
 
 void * SCI_METHOD DefaultLexer::PrivateCall(int, void *) {

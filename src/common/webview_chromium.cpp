@@ -87,7 +87,7 @@ namespace
 
 constexpr const char* TRACE_CEF = "cef";
 
-#define TRACE_CEF_FUNCTION() wxLogTrace(TRACE_CEF, "%s called", __FUNCTION__)
+#define TRACE_CEF_FUNCTION() wxLogTrace(TRACE_CEF, "%s called", __func__)
 
 } // anonymous namespace
 
@@ -263,7 +263,7 @@ public:
                                       new wxWebViewConfigurationImplChromium);
     }
 
-    virtual void* GetNativeConfiguration() const
+    virtual void* GetNativeConfiguration() const override
     {
         // Our "native" configuration is our own Chromium-specific class from
         // which we inherit.
@@ -315,6 +315,9 @@ struct ImplData
     // These flags are used when destroying wxWebViewChromium, see its dtor.
     bool m_calledDoClose = false;
     bool m_calledOnBeforeClose = false;
+
+    // This can be changed by the application and affects popup menus.
+    bool m_enableDevTools = false;
 };
 
 // ----------------------------------------------------------------------------
@@ -330,6 +333,18 @@ class ClientHandler : public CefClient,
     public CefRequestHandler,
     public CefResourceRequestHandler
 {
+private:
+    // Custom context menu commands
+    enum class CustomMenuId
+    {
+        // The first ID value is completely arbitrary, just don't start
+        // directly at MENU_ID_USER_FIRST as application might want to add its
+        // own items in this range.
+        SHOW_DEVTOOLS = MENU_ID_USER_FIRST + 500,
+        CLOSE_DEVTOOLS,
+        INSPECT_ELEMENT
+    };
+
 public:
     // Ctor must be given a backpointer to wxWebView which must remain valid
     // for the entire lifetime of this object.
@@ -475,7 +490,22 @@ public:
         return host->GetWindowHandle();
     }
 
+    // Open the dev tools window.
+    bool ShowDevTools()
+    {
+        if ( !m_browser )
+            return false;
+
+        DoShowDevTools(m_browser, CefPoint{});
+
+        return true;
+    }
+
 private:
+    void DoShowDevTools(CefRefPtr<CefBrowser> browser,
+        const CefPoint& inspect_element_at);
+    void CloseDevTools(CefRefPtr<CefBrowser> browser);
+
     CefRefPtr<CefBrowser> m_browser;
     wxWebViewChromium& m_webview;
     int m_browserId;
@@ -829,9 +859,22 @@ bool wxWebViewChromium::DoCreateBrowser(const wxString& url)
         }
     }
 
+    // Check if we need to create a custom client handler.
+    const auto configChrome =
+        static_cast<wxWebViewConfigurationChromium*>(m_implData->m_config.GetNativeConfiguration());
+    if ( auto create = configChrome->m_clientCreate )
+    {
+        m_actualClient = create(m_clientHandler, configChrome->m_clientCreateData);
+        if ( m_actualClient )
+            m_actualClient->AddRef();
+    }
+
+    if ( !m_actualClient )
+        m_actualClient = m_clientHandler;
+
     if ( !CefBrowserHost::CreateBrowser(
             info,
-            CefRefPtr<CefClient>{m_clientHandler},
+            CefRefPtr<CefClient>{m_actualClient},
             url.ToStdString(),
             browsersettings,
             nullptr, // No extra info
@@ -856,7 +899,10 @@ wxWebViewChromium::~wxWebViewChromium()
 
         constexpr bool forceClose = true;
         m_clientHandler->GetHost()->CloseBrowser(forceClose);
-        m_clientHandler->Release();
+
+        // We need to destroy the client handler used by the browser to allow
+        // it to close.
+        m_actualClient->Release();
 
         // We need to wait until the browser is really closed, which happens
         // asynchronously, as otherwise we could exit the program and call
@@ -905,6 +951,11 @@ wxWebViewChromium::~wxWebViewChromium()
         // really destroying the object before CefShutdown() is called.
         wxUnusedVar(handle);
 #endif
+
+        // If we hadn't release our own client handler above, we need to do it
+        // now (notice that it's safe to do it, as it can't be used any more).
+        if ( m_clientHandler != m_actualClient )
+            m_clientHandler->Release();
     }
 
     delete m_implData;
@@ -1038,6 +1089,12 @@ bool wxWebViewChromium::InitCEF(const wxWebViewConfiguration& config)
     }
 
     CefString(&settings.log_file).FromWString(logFile.ToStdWstring());
+
+    // And remote debugging, if specified.
+    if ( configChrome->m_remoteDebuggingPort )
+    {
+        settings.remote_debugging_port = configChrome->m_remoteDebuggingPort;
+    }
 
 #ifdef __WXMSW__
     CefMainArgs args(wxGetInstance());
@@ -1220,6 +1277,21 @@ bool wxWebViewChromium::SetProxy(const wxString& proxy)
     m_implData->m_proxy = proxy;
 
     return true;
+}
+
+void wxWebViewChromium::EnableAccessToDevTools(bool enable)
+{
+    m_implData->m_enableDevTools = enable;
+}
+
+bool wxWebViewChromium::ShowDevTools()
+{
+    return m_clientHandler->ShowDevTools();
+}
+
+bool wxWebViewChromium::IsAccessToDevToolsEnabled() const
+{
+    return m_implData->m_enableDevTools;
 }
 
 wxString wxWebViewChromium::GetPageSource() const
@@ -1525,16 +1597,57 @@ void ClientHandler::OnBeforeContextMenu(CefRefPtr<CefBrowser> WXUNUSED(browser),
                                         CefRefPtr<CefMenuModel> model)
 {
     if(!m_webview.IsContextMenuEnabled())
+    {
         model->Clear();
+        return;
+    }
+
+    // Add DevTools items to all context menus if enabled.
+    if ( m_webview.IsAccessToDevToolsEnabled() )
+    {
+        // Add a separator if the menu already has items.
+        if ( model->GetCount() )
+            model->AddSeparator();
+
+        const auto addMenuItem = [model](CustomMenuId id, const wxString& label)
+        {
+            model->AddItem(static_cast<int>(id), label.utf8_string());
+        };
+
+        addMenuItem(CustomMenuId::SHOW_DEVTOOLS, _("Show DevTools"));
+        addMenuItem(CustomMenuId::CLOSE_DEVTOOLS, _("Close DevTools"));
+
+        // Note that if we add support for "Chrome" style, as opposed to using
+        // the "Alloy" style we use now, we should stop doing this as "Chrome"
+        // style already has "Inspect" menu item in its default context menu.
+        model->AddSeparator();
+        addMenuItem(CustomMenuId::INSPECT_ELEMENT, _("Inspect"));
+    }
 }
 
-bool ClientHandler::OnContextMenuCommand(CefRefPtr<CefBrowser> WXUNUSED(browser),
+bool ClientHandler::OnContextMenuCommand(CefRefPtr<CefBrowser> browser,
                                          CefRefPtr<CefFrame> WXUNUSED(frame),
-                                         CefRefPtr<CefContextMenuParams> WXUNUSED(params),
-                                         int WXUNUSED(command_id),
+                                         CefRefPtr<CefContextMenuParams> params,
+                                         int command_id,
                                          CefContextMenuHandler::EventFlags WXUNUSED(event_flags))
 {
-    return false;
+    switch ( static_cast<CustomMenuId>(command_id) )
+    {
+        case CustomMenuId::SHOW_DEVTOOLS:
+            DoShowDevTools(browser, CefPoint{});
+            break;
+        case CustomMenuId::CLOSE_DEVTOOLS:
+            CloseDevTools(browser);
+            break;
+        case CustomMenuId::INSPECT_ELEMENT:
+            DoShowDevTools(browser, CefPoint{params->GetXCoord(), params->GetYCoord()});
+            break;
+        default:
+            // Allow default handling, if any.
+            return false;
+    }
+
+    return true;
 }
 
 void ClientHandler::OnContextMenuDismissed(CefRefPtr<CefBrowser> WXUNUSED(browser),
@@ -1766,6 +1879,18 @@ CefRefPtr<CefResourceHandler> ClientHandler::GetResourceHandler(
     return m_resourceManager->GetResourceHandler(browser, frame, request);
 }
 
+void
+ClientHandler::DoShowDevTools(CefRefPtr<CefBrowser> browser,
+                              const CefPoint& inspect_element_at)
+{
+    browser->GetHost()->ShowDevTools({}, {}, {}, inspect_element_at);
+}
+
+void ClientHandler::CloseDevTools(CefRefPtr<CefBrowser> browser)
+{
+    browser->GetHost()->CloseDevTools();
+}
+
 bool SchemeHandler::ProcessRequest(CefRefPtr<CefRequest> request,
                                    CefRefPtr<CefCallback> callback)
 {
@@ -1932,16 +2057,33 @@ public:
         return true;
     }
 
-    virtual wxVersionInfo GetVersionInfo() override
+    virtual wxVersionInfo GetVersionInfo(wxVersionContext context) override
     {
-        return {
-            "CEF",
-            CEF_VERSION_MAJOR,
-            CEF_VERSION_MINOR,
-            CEF_VERSION_PATCH,
-            CEF_COMMIT_NUMBER,
-            CEF_VERSION
-        };
+        wxString version;
+        int major wxDUMMY_INITIALIZE(0),
+            minor wxDUMMY_INITIALIZE(0),
+            micro wxDUMMY_INITIALIZE(0),
+            build wxDUMMY_INITIALIZE(0);
+        switch ( context )
+        {
+            case wxVersionContext::RunTime:
+                major = cef_version_info(0);
+                minor = cef_version_info(1);
+                micro = cef_version_info(2);
+                build = cef_version_info(3);
+                break;
+
+            case wxVersionContext::BuildTime:
+                major = CEF_VERSION_MAJOR;
+                minor = CEF_VERSION_MINOR;
+                micro = CEF_VERSION_PATCH;
+                build = CEF_COMMIT_NUMBER;
+
+                version = CEF_VERSION;
+                break;
+        }
+
+        return {"CEF", major, minor, micro, build, version};
     }
 
     virtual wxWebViewConfiguration CreateConfiguration() override

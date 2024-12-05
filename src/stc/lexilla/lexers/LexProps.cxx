@@ -22,10 +22,10 @@
 #include "LexAccessor.h"
 #include "Accessor.h"
 #include "StyleContext.h"
-#include "CharacterSet.h"
+#include "LexCharacterSet.h"
 #include "LexerModule.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 static inline bool AtEOL(Accessor &styler, Sci_PositionU i) {
 	return (styler[i] == '\n') ||
@@ -118,7 +118,7 @@ static void FoldPropsDoc(Sci_PositionU startPos, Sci_Position length, int, WordL
 	char chNext = styler[startPos];
 	int styleNext = styler.StyleAt(startPos);
 	bool headerPoint = false;
-	int lev;
+	int levelPrevious = (lineCurrent > 0) ? styler.LevelAt(lineCurrent - 1) : SC_FOLDLEVELBASE;
 
 	for (Sci_PositionU i = startPos; i < endPos; i++) {
 		const char ch = chNext;
@@ -133,27 +133,19 @@ static void FoldPropsDoc(Sci_PositionU startPos, Sci_Position length, int, WordL
 		}
 
 		if (atEOL) {
-			lev = SC_FOLDLEVELBASE;
-
-			if (lineCurrent > 0) {
-				const int levelPrevious = styler.LevelAt(lineCurrent - 1);
-
-				if (levelPrevious & SC_FOLDLEVELHEADERFLAG) {
-					lev = SC_FOLDLEVELBASE + 1;
-				} else {
-					lev = levelPrevious & SC_FOLDLEVELNUMBERMASK;
-				}
-			}
-
+			int lev = levelPrevious & SC_FOLDLEVELNUMBERMASK;
 			if (headerPoint) {
-				lev = SC_FOLDLEVELBASE;
+				lev = SC_FOLDLEVELBASE | SC_FOLDLEVELHEADERFLAG;
+				if (levelPrevious & SC_FOLDLEVELHEADERFLAG) {
+					// previous section is empty
+					styler.SetLevel(lineCurrent - 1, SC_FOLDLEVELBASE);
+				}
+			} else if (levelPrevious & SC_FOLDLEVELHEADERFLAG) {
+				lev += 1;
 			}
+
 			if (visibleChars == 0 && foldCompact)
 				lev |= SC_FOLDLEVELWHITEFLAG;
-
-			if (headerPoint) {
-				lev |= SC_FOLDLEVELHEADERFLAG;
-			}
 			if (lev != styler.LevelAt(lineCurrent)) {
 				styler.SetLevel(lineCurrent, lev);
 			}
@@ -161,23 +153,18 @@ static void FoldPropsDoc(Sci_PositionU startPos, Sci_Position length, int, WordL
 			lineCurrent++;
 			visibleChars = 0;
 			headerPoint = false;
+			levelPrevious = lev;
 		}
 		if (!isspacechar(ch))
 			visibleChars++;
 	}
 
-	if (lineCurrent > 0) {
-		const int levelPrevious = styler.LevelAt(lineCurrent - 1);
-		if (levelPrevious & SC_FOLDLEVELHEADERFLAG) {
-			lev = SC_FOLDLEVELBASE + 1;
-		} else {
-			lev = levelPrevious & SC_FOLDLEVELNUMBERMASK;
-		}
-	} else {
-		lev = SC_FOLDLEVELBASE;
+	int level = levelPrevious & SC_FOLDLEVELNUMBERMASK;
+	if (levelPrevious & SC_FOLDLEVELHEADERFLAG) {
+		level += 1;
 	}
 	int flagsNext = styler.LevelAt(lineCurrent);
-	styler.SetLevel(lineCurrent, lev | (flagsNext & ~SC_FOLDLEVELNUMBERMASK));
+	styler.SetLevel(lineCurrent, level | (flagsNext & ~SC_FOLDLEVELNUMBERMASK));
 }
 
 static const char *const emptyWordListDesc[] = {
