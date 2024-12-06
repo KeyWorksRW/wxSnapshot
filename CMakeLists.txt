@@ -70,12 +70,15 @@ elseif(UNIX)
     set(CMAKE_C_FLAGS_RELEASE ${cl_optimize} CACHE STRING "C Release flags" FORCE)
 endif()
 
-include(GNUInstallDirs)
+if (NOT BUILD_SNAPSHOT)
+    set(CMAKE_SKIP_INSTALL_ALL ON)
+    include(GNUInstallDirs)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
-set (CMAKE_DEBUG_POSTFIX d)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/lib>)
+    set (CMAKE_DEBUG_POSTFIX d)
+endif()
 
 include( wxWidgets.cmake )  # This will set ${common_sources}, ${msw_sources}, ${unix_sources} and ${osx_sources}
 include( wxCLib.cmake )     # This will set ${wxCLib_sources} with list of files
@@ -193,6 +196,9 @@ target_include_directories(wxWidgets33 PRIVATE
     src/stc/lexilla/access
     src/stc/lexilla/lexlib
     src/stc/scintilla/src
+
+    3rdparty/lunasvg/include
+    3rdparty/plutovg/include
 )
 
 target_include_directories(wxCLib PRIVATE
@@ -203,6 +209,7 @@ target_include_directories(wxCLib PRIVATE
     src/zlib
     3rdparty/pcre/src/wx
     src/expat/expat/lib
+    3rdparty/plutovg/include
 )
 
 if (BUILD_SHARED_LIBS)

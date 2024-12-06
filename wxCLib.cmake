@@ -154,6 +154,19 @@ set (wxCLib_sources
     3rdparty/pcre/src/pcre2_valid_utf.c
     3rdparty/pcre/src/pcre2_xclass.c
 
+    # plutovg
+    3rdparty/plutovg/source/plutovg-blend.c
+    3rdparty/plutovg/source/plutovg-canvas.c
+    3rdparty/plutovg/source/plutovg-font.c
+    3rdparty/plutovg/source/plutovg-matrix.c
+    3rdparty/plutovg/source/plutovg-paint.c
+    3rdparty/plutovg/source/plutovg-path.c
+    3rdparty/plutovg/source/plutovg-rasterize.c
+    3rdparty/plutovg/source/plutovg-surface.c
+    3rdparty/plutovg/source/plutovg-ft-math.c
+    3rdparty/plutovg/source/plutovg-ft-raster.c
+    3rdparty/plutovg/source/plutovg-ft-stroker.c
+
     # wx_wxexpat
     src/expat/expat/lib/xmlparse.c
     src/expat/expat/lib/xmlrole.c

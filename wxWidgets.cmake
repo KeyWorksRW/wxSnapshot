@@ -640,6 +640,18 @@ set (common_sources
     src/xrc/xh_hyperlink.cpp
     src/xrc/xh_sttxt.cpp
 
+    # lunasvg
+    3rdparty/lunasvg/source/lunasvg.cpp
+    3rdparty/lunasvg/source/graphics.cpp
+    3rdparty/lunasvg/source/svgelement.cpp
+    3rdparty/lunasvg/source/svggeometryelement.cpp
+    3rdparty/lunasvg/source/svglayoutstate.cpp
+    3rdparty/lunasvg/source/svgpaintelement.cpp
+    3rdparty/lunasvg/source/svgparser.cpp
+    3rdparty/lunasvg/source/svgproperty.cpp
+    3rdparty/lunasvg/source/svgrenderstate.cpp
+    3rdparty/lunasvg/source/svgtextelement.cpp
+
 )
 
 set (msw_sources
