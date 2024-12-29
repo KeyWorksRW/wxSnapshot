@@ -116,3 +116,6 @@ src/zlib/Release
 .vscode/
 *.code-workspace
 *.code-search
+
+# MAC Finder files
+.DS_Store
