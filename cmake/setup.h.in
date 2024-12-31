@@ -1,0 +1,2243 @@
+// This define (__WX_SETUP_H__) is used both to ensure setup.h is included only
+// once and to indicate that we are building using configure.
+#ifndef __WX_SETUP_H__
+#define __WX_SETUP_H__
+
+// never undefine inline or const keywords for C++ compilation
+#ifndef __cplusplus
+
+// Define to empty if the keyword does not work.
+#undef const
+
+// Define as __inline if that's what the C compiler calls it.
+#undef inline
+
+#endif  // __cplusplus
+
+// Define if ssize_t type is available.
+#cmakedefine HAVE_SSIZE_T 1
+
+// Define if you have the ANSI C header files.
+#cmakedefine STDC_HEADERS 1
+
+// Define this to get extra features from GNU libc.
+#ifndef _GNU_SOURCE
+#cmakedefine _GNU_SOURCE 1
+#endif
+
+// Define if your processor stores words with the most significant byte first
+// (like Motorola and SPARC, unlike Intel and VAX).
+#cmakedefine WORDS_BIGENDIAN 1
+
+// Define this if your version of GTK+ is greater than 2.0
+#cmakedefine __WXGTK20__ 1
+
+// Define this if your version of GTK+ is greater than 2.10
+#cmakedefine __WXGTK210__ 1
+
+// Define this if your version of GTK+ is greater than 2.18
+#cmakedefine __WXGTK218__ 1
+
+// Define this if your version of GTK+ is greater than 2.20
+#cmakedefine __WXGTK220__ 1
+
+// Define this if your version of GTK+ is >= 3.0
+#cmakedefine __WXGTK3__ 1
+
+// Define this if your version of GTK+ is >= 3.90.0
+#cmakedefine __WXGTK4__ 1
+
+// Define to 1 for Unix[-like] system
+#cmakedefine01 wxUSE_UNIX
+
+#cmakedefine __UNIX__ 1
+
+#cmakedefine __AIX__ 1
+#cmakedefine __BSD__ 1
+#cmakedefine __DARWIN__ 1
+#cmakedefine __EMX__ 1
+#cmakedefine __FREEBSD__ 1
+#cmakedefine __HPUX__ 1
+#cmakedefine __LINUX__ 1
+#cmakedefine __NETBSD__ 1
+#cmakedefine __OPENBSD__ 1
+#cmakedefine __OSF__ 1
+#cmakedefine __QNX__ 1
+#cmakedefine __SGI__ 1
+#cmakedefine __SOLARIS__ 1
+#cmakedefine __SUN__ 1
+#cmakedefine __SUNOS__ 1
+#cmakedefine __SVR4__ 1
+#cmakedefine __SYSV__ 1
+#cmakedefine __ULTRIX__ 1
+#cmakedefine __UNIXWARE__ 1
+#cmakedefine __VMS__ 1
+
+#cmakedefine __IA64__ 1
+
+// NanoX (with wxX11)
+#cmakedefine01 wxUSE_NANOX
+
+// Stupid hack; __WINDOWS__ clashes with wx/defs.h
+#ifndef __WINDOWS__
+#cmakedefine __WINDOWS__ 1
+#endif
+
+#ifndef __WIN32__
+#cmakedefine __WIN32__ 1
+#endif
+#ifndef __GNUWIN32__
+#cmakedefine __GNUWIN32__ 1
+#endif
+#ifndef STRICT
+#cmakedefine STRICT
+#endif
+#ifndef WINVER
+#cmakedefine WINVER
+#endif
+
+// ----------------------------------------------------------------------------
+// --- start common options ---
+// ----------------------------------------------------------------------------
+
+#ifndef wxUSE_GUI
+    #cmakedefine01 wxUSE_GUI
+#endif
+
+// ----------------------------------------------------------------------------
+// compatibility settings
+// ----------------------------------------------------------------------------
+
+// This setting determines the compatibility with 3.0 API: set it to 0 to
+// flag all cases of using deprecated functions.
+//
+// Default is 0, but you may still set it to 1 if you can't update the existing
+// code relying on the deprecated functions. Please do consider updating it if
+// at all possible instead of changing this to 1, however, as these functions
+// will completely disappear in the next wxWidgets release.
+//
+// Recommended setting: 0 (please update your code)
+#cmakedefine01 WXWIN_COMPATIBILITY_3_0
+
+// This setting determines the compatibility with 3.2 API: set it to 0 to
+// flag all cases of using deprecated functions.
+//
+// Default is 1 but please try building your code with 0 as the default will
+// change to 0 in the next version and the deprecated functions will disappear
+// in the version after it completely.
+//
+// Recommended setting: 0 (please update your code)
+#cmakedefine01 WXWIN_COMPATIBILITY_3_2
+
+// MSW-only: Set to 0 for accurate dialog units, else 1 for old behaviour when
+// default system font is used for wxWindow::GetCharWidth/Height() instead of
+// the current font.
+//
+// Default is 0
+//
+// Recommended setting: 0
+#cmakedefine01 wxDIALOG_UNIT_COMPATIBILITY
+
+// If set to 1, enables "reproducible builds", i.e. build output should be
+// exactly the same if the same build is redone again. As using __DATE__ and
+// __TIME__ macros clearly makes the build irreproducible, setting this option
+// to 1 disables their use in the library code.
+//
+// Default is 0
+//
+// Recommended setting: 0
+#cmakedefine01 wxUSE_REPRODUCIBLE_BUILD
+
+// If set to 1, wxString uses UTF-8 internally instead of UTF-32 (Unix) or
+// UTF-16 (MSW).
+//
+// This option can be set to 1 if you want to avoid the overhead of converting
+// between wchar_t encoding (UTF-32 or UTF-16) used by wxString by default and
+// UTF-8, i.e. it makes functions such as wxString::FromUTF8() and utf8_str()
+// much more efficient and constant time, as they don't perform any conversion
+// any longer, which is especially interesting in wxGTK where these functions
+// are used every time a GTK function is called. But this is compensated by
+// making all the non-UTF-8 functions less efficient, notably requiring a
+// conversion when passing any string to Win32 API.
+//
+// Moreover, accessing strings by character index becomes, in general, a O(N)
+// iteration, where N is the index, so only enable this option if you don't use
+// index access for arbitrary characters (unless it is done inside a loop
+// consecutively for all characters as this special access pattern is optimized
+// by caching the last accessed index -- but using iterate, or range for loop,
+// is still better even in this case), as otherwise you may observe significant
+// slowdown in your program performance.
+//
+// Default is 0
+//
+// Recommended setting: 0 but can be set to 1 for optimization purposes and if
+// you're sure that you're not using loops using indices to iterate over
+// strings in your code.
+#cmakedefine01 wxUSE_UNICODE_UTF8
+
+// If set to 1, assume that all narrow strings use UTF-8.
+//
+// By default, wxWidgets assumes that all "char*" strings use the encoding of
+// the current locale, which is commonly, but not always, UTF-8 under Unix but
+// rarely UTF-8 under MSW. This option tells the library that all strings
+// always use UTF-8, avoiding the need to perform any conversions between them
+// and wxString internal representation when wxUSE_UNICODE_UTF8 is set to 1.
+//
+// In fact, using this option only makes sense when wxUSE_UNICODE_UTF8==1 and
+// it must not be enabled without the other option.
+//
+// Default is 0
+//
+// Recommended setting: 0 but can be set to 1 if your program is always run in
+// an UTF-8 locale.
+#cmakedefine01 wxUSE_UTF8_LOCALE_ONLY
+
+// ----------------------------------------------------------------------------
+// debugging settings
+// ----------------------------------------------------------------------------
+
+// wxDEBUG_LEVEL will be defined as 1 in wx/debug.h so normally there is no
+// need to define it here. You may do it for two reasons: either completely
+// disable/compile out the asserts in release version (then do it inside #ifdef
+// NDEBUG) or, on the contrary, enable more asserts, including the usually
+// disabled ones, in the debug build (then do it inside #ifndef NDEBUG)
+//
+// #ifdef NDEBUG
+//  #define wxDEBUG_LEVEL 0
+// #else
+//  #define wxDEBUG_LEVEL 2
+// #endif
+
+// wxHandleFatalExceptions() may be used to catch the program faults at run
+// time and, instead of terminating the program with a usual GPF message box,
+// call the user-defined wxApp::OnFatalException() function. If you set
+// wxUSE_ON_FATAL_EXCEPTION to 0, wxHandleFatalExceptions() will not work.
+//
+// This setting is for Win32 only and can only be enabled if your compiler
+// supports Win32 structured exception handling (currently only VC++ does)
+//
+// Default is 1
+//
+// Recommended setting: 1 if your compiler supports it.
+#cmakedefine01 wxUSE_ON_FATAL_EXCEPTION
+
+// Set this to 1 to be able to generate a human-readable (unlike
+// machine-readable minidump created by wxCrashReport::Generate()) stack back
+// trace when your program crashes using wxStackWalker
+//
+// Default is 1 if supported by the compiler.
+//
+// Recommended setting: 1, set to 0 if your programs never crash
+#cmakedefine01 wxUSE_STACKWALKER
+
+// Set this to 1 to compile in wxDebugReport class which allows you to create
+// and optionally upload to your web site a debug report consisting of back
+// trace of the crash (if wxUSE_STACKWALKER == 1) and other information.
+//
+// Default is 1 if supported by the compiler.
+//
+// Recommended setting: 1, it is compiled into a separate library so there
+//                         is no overhead if you don't use it
+#cmakedefine01 wxUSE_DEBUGREPORT
+
+// ----------------------------------------------------------------------------
+// global features
+// ----------------------------------------------------------------------------
+
+// Compile library in exception-safe mode? If set to 1, the library will try to
+// behave correctly in presence of exceptions (even though it still will not
+// use the exceptions itself) and notify the user code about any unhandled
+// exceptions. If set to 0, propagation of the exceptions through the library
+// code will lead to undefined behaviour -- but the code itself will be
+// slightly smaller and faster.
+//
+// Note that like wxUSE_THREADS this option is automatically set to 0 if
+// wxNO_EXCEPTIONS is defined.
+//
+// Default is 1
+//
+// Recommended setting: depends on whether you intend to use C++ exceptions
+//                      in your own code (1 if you do, 0 if you don't)
+#cmakedefine01 wxUSE_EXCEPTIONS
+
+// Set wxUSE_EXTENDED_RTTI to 1 to use extended RTTI
+//
+// This feature is incomplete and experimental, please only enable it if
+// you want to participate in its development.
+//
+// Recommended setting: 0 (unless you wish to try working on it).
+#cmakedefine01 wxUSE_EXTENDED_RTTI
+
+// Support for message/error logging. This includes wxLogXXX() functions and
+// wxLog and derived classes. Don't set this to 0 unless you really know what
+// you are doing.
+//
+// Default is 1
+//
+// Recommended setting: 1 (always)
+#cmakedefine01 wxUSE_LOG
+
+#cmakedefine01 wxUSE_LOGWINDOW
+#cmakedefine01 wxUSE_LOGGUI
+#cmakedefine01 wxUSE_LOG_DIALOG
+
+// Support for command line parsing using wxCmdLineParser class.
+//
+// Default is 1
+//
+// Recommended setting: 1 (can be set to 0 if you don't use the cmd line)
+#cmakedefine01 wxUSE_CMDLINE_PARSER
+
+// Support for multithreaded applications: if 1, compile in thread classes
+// (thread.h) and make the library a bit more thread safe. Although thread
+// support is quite stable by now, you may still consider recompiling the
+// library without it if you have no use for it - this will result in a
+// somewhat smaller and faster operation.
+//
+// Notice that if wxNO_THREADS is defined, wxUSE_THREADS is automatically reset
+// to 0 in wx/chkconf.h, so, for example, if you set USE_THREADS to 0 in
+// build/msw/config.* file this value will have no effect.
+//
+// Default is 1
+//
+// Under Windows, wxUSE_THREADS is required if wxUSE_FSWATCHER or wxUSE_JOYSTICK
+// are enabled.
+//
+// Recommended setting: 0 unless you do plan to develop MT applications
+#cmakedefine01 wxUSE_THREADS
+
+// If enabled, compiles wxWidgets streams classes
+//
+// wx stream classes are used for image IO, process IO redirection, network
+// protocols implementation and much more and so disabling this results in a
+// lot of other functionality being lost.
+//
+// Default is 1
+//
+// Recommended setting: 1 as setting it to 0 disables many other things
+#cmakedefine01 wxUSE_STREAMS
+
+// Support for positional parameters (e.g. %1$d, %2$s ...) in wxVsnprintf.
+// Note that if the system's implementation does not support positional
+// parameters, setting this to 1 forces the use of the wxWidgets implementation
+// of wxVsnprintf. The standard vsnprintf() supports positional parameters on
+// many Unix systems but usually doesn't under Windows.
+//
+// Positional parameters are very useful when translating a program since using
+// them in formatting strings allow translators to correctly reorder the
+// translated sentences.
+//
+// Default is 1
+//
+// Recommended setting: 1 if you want to support multiple languages
+#cmakedefine01 wxUSE_PRINTF_POS_PARAMS
+
+// ----------------------------------------------------------------------------
+// Interoperability with the standard library.
+// ----------------------------------------------------------------------------
+
+// Use standard C++ containers to implement all wx container classes.
+//
+// Default is 1.
+//
+// Recommended setting: 1 unless you really need to set it to 0 to preserve
+// compatibility with the existing code.
+#cmakedefine01 wxUSE_STD_CONTAINERS
+
+// Use standard C++ streams if 1 instead of wx streams in some places. If
+// disabled, wx streams are used instead.
+//
+// Notice that enabling this does not replace wx streams with std streams
+// everywhere, in a lot of places wx streams are used no matter what.
+//
+// Default is 1.
+//
+// Recommended setting: 1.
+#cmakedefine01 wxUSE_STD_IOSTREAM
+
+// ----------------------------------------------------------------------------
+// wxString-related options
+// ----------------------------------------------------------------------------
+
+// Provide unsafe implicit conversions in wxString to "const char*" or
+// "std::string" (only if implicit conversions are not disabled entirely).
+//
+// Default is 1 for compatibility reasons, it is recommended to set
+// this to 0 because converting wxString to a narrow (non-Unicode) string may
+// fail unless a locale using UTF-8 encoding is used, which is never the case
+// under MSW, for example, hence such conversions can result in silent data
+// loss.
+//
+// Recommended setting: 1 to remain compatible with the official builds of
+// wxWidgets, but define wxNO_UNSAFE_WXSTRING_CONV when compiling the
+// application code to effectively disallow using these conversions.
+#cmakedefine01 wxUSE_UNSAFE_WXSTRING_CONV
+
+// Define implicit conversions of wxString to std::wstring and std::string if
+// wxUSE_UNSAFE_WXSTRING_CONV is also enabled.
+//
+// Note that wxString can always be constructed from std::[w]string, whether
+// this option is turned on or off, it only enables implicit conversion in the
+// other direction.
+//
+// If this setting is changed to 1, implicit conversions to pointer types are
+// disabled as defining both kinds of implicit conversions would result in
+// ambiguities.
+//
+// Default is 0.
+//
+// Recommended setting: 0, use wxString::ToStdWstring() and ToStdString() or,
+// preferably, utf8_string() explicitly instead.
+#cmakedefine01 wxUSE_STD_STRING_CONV_IN_WXSTRING
+
+// Set wxUSE_BASE64 to 1, to compile in Base64 support. This is required for
+// storing binary data in wxConfig on most platforms.
+//
+// Default is 1.
+//
+// Recommended setting: 1 (but can be safely disabled if you don't use it)
+#cmakedefine01 wxUSE_BASE64
+
+// Set this to 1 to be able to use wxEventLoop even in console applications
+// (i.e. using base library only, without GUI). This is mostly useful for
+// processing socket events but is also necessary to use timers in console
+// applications
+//
+// Default is 1.
+//
+// Recommended setting: 1 (but can be safely disabled if you don't use it)
+#cmakedefine01 wxUSE_CONSOLE_EVENTLOOP
+
+// Set wxUSE_(F)FILE to 1 to compile wx(F)File classes. wxFile uses low level
+// POSIX functions for file access, wxFFile uses ANSI C stdio.h functions.
+//
+// Default is 1
+//
+// Recommended setting: 1 (wxFile is highly recommended as it is required by
+// i18n code, wxFileConfig and others)
+#cmakedefine01 wxUSE_FILE
+#cmakedefine01 wxUSE_FFILE
+
+// Use wxFSVolume class providing access to the configured/active mount points
+//
+// Default is 1
+//
+// Recommended setting: 1 (but may be safely disabled if you don't use it)
+#cmakedefine01 wxUSE_FSVOLUME
+
+// Use wxSecretStore class for storing passwords using OS-specific facilities.
+//
+// Default is 1
+//
+// Recommended setting: 1 (but may be safely disabled if you don't use it)
+#cmakedefine01 wxUSE_SECRETSTORE
+
+// Allow the use of the OS built-in spell checker in wxTextCtrl.
+//
+// Default is 1, the corresponding wxTextCtrl functions simply won't do
+// anything if the functionality is not supported by the current platform.
+//
+// Recommended setting: 1 unless you want to save a tiny bit of code.
+#cmakedefine01 wxUSE_SPELLCHECK
+
+// Use wxStandardPaths class which allows to retrieve some standard locations
+// in the file system
+//
+// Default is 1
+//
+// Recommended setting: 1 (may be disabled to save space, but not much)
+#cmakedefine01 wxUSE_STDPATHS
+
+// use wxTextBuffer class: required by wxTextFile
+#cmakedefine01 wxUSE_TEXTBUFFER
+
+// use wxTextFile class: requires wxFile and wxTextBuffer, required by
+// wxFileConfig
+#cmakedefine01 wxUSE_TEXTFILE
+
+// i18n support: _() macro, wxLocale class.
+#cmakedefine01 wxUSE_INTL
+
+// Provide wxFoo_l() functions similar to standard foo() functions but taking
+// an extra locale parameter.
+//
+// Notice that this is fully implemented only for the systems providing POSIX
+// xlocale support or Microsoft Visual C++ >= 8 (which provides proprietary
+// almost-equivalent of xlocale functions), otherwise wxFoo_l() functions will
+// only work for the current user locale and "C" locale. You can use
+// wxHAS_XLOCALE_SUPPORT to test whether the full support is available.
+//
+// Default is 1
+//
+// Recommended setting: 1 but may be disabled if you are writing programs
+// running only in C locale anyhow
+#cmakedefine01 wxUSE_XLOCALE
+
+// Set wxUSE_DATETIME to 1 to compile the wxDateTime and related classes which
+// allow to manipulate dates, times and time intervals.
+//
+// Requires: wxUSE_LONGLONG
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_DATETIME
+
+// Set wxUSE_TIMER to 1 to compile wxTimer class
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_TIMER
+
+// Use wxStopWatch class.
+//
+// Default is 1
+//
+// Recommended setting: 1 (needed by wxSocket)
+#cmakedefine01 wxUSE_STOPWATCH
+
+// Set wxUSE_FSWATCHER to 1 if you want to enable wxFileSystemWatcher
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_FSWATCHER
+
+// Setting wxUSE_CONFIG to 1 enables the use of wxConfig and related classes
+// which allow the application to store its settings in the persistent
+// storage. Setting this to 1 will also enable on-demand creation of the
+// global config object in wxApp.
+//
+// See also wxUSE_CONFIG_NATIVE below.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_CONFIG
+
+// If wxUSE_CONFIG is 1, you may choose to use either the native config
+// classes under Windows (using the registry) or the portable text file
+// format used by the config classes under Unix.
+//
+// Default is 1 to use native classes. Note that you may still use
+// wxFileConfig even if you set this to 1 - just the config object created by
+// default for the applications needs will be a wxRegConfig or wxIniConfig and
+// not wxFileConfig.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_CONFIG_NATIVE
+
+// If wxUSE_DIALUP_MANAGER is 1, compile in wxDialUpManager class which allows
+// to connect/disconnect from the network and be notified whenever the dial-up
+// network connection is established/terminated. Requires wxUSE_DYNAMIC_LOADER.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_DIALUP_MANAGER
+
+// Compile in classes for run-time DLL loading and function calling.
+//
+// This is required by wxMSW implementation and so is always enabled there,
+// regardless of the value here. For the other ports this option can be
+// disabled to save a tiny amount of code, but there is typically no reason to
+// do it.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_DYNLIB_CLASS
+
+// experimental, don't use for now
+#cmakedefine01 wxUSE_DYNAMIC_LOADER
+
+// Set to 1 to use socket classes
+#cmakedefine01 wxUSE_SOCKETS
+
+// Set to 1 to use ipv6 socket classes (requires wxUSE_SOCKETS)
+//
+// Default is 1.
+//
+// Recommended setting: 1.
+#cmakedefine01 wxUSE_IPV6
+
+// Set to 1 to enable virtual file systems (required by wxHTML)
+#cmakedefine01 wxUSE_FILESYSTEM
+
+// Set to 1 to enable virtual ZIP filesystem (requires wxUSE_FILESYSTEM)
+#cmakedefine01 wxUSE_FS_ZIP
+
+// Set to 1 to enable virtual archive filesystem (requires wxUSE_FILESYSTEM)
+#cmakedefine01 wxUSE_FS_ARCHIVE
+
+// Set to 1 to enable virtual Internet filesystem (requires wxUSE_FILESYSTEM)
+#cmakedefine01 wxUSE_FS_INET
+
+// wxArchive classes for accessing archives such as zip and tar
+#cmakedefine01 wxUSE_ARCHIVE_STREAMS
+
+// Set to 1 to compile wxZipInput/OutputStream classes.
+#cmakedefine01 wxUSE_ZIPSTREAM
+
+// Set to 1 to compile wxTarInput/OutputStream classes.
+#cmakedefine01 wxUSE_TARSTREAM
+
+// Set to 1 to compile wxZlibInput/OutputStream classes. Also required by
+// wxUSE_LIBPNG
+#cmakedefine01 wxUSE_ZLIB
+
+// Set to 1 if liblzma is available to enable wxLZMA{Input,Output}Stream
+// classes.
+//
+// Notice that if you enable this build option when not using configure or
+// CMake, you need to ensure that liblzma headers and libraries are available
+// (i.e. by building the library yourself or downloading its binaries) and can
+// be found, either by copying them to one of the locations searched by the
+// compiler/linker by default (e.g. any of the directories in the INCLUDE or
+// LIB environment variables, respectively, when using MSVC) or modify the
+// make- or project files to add references to these directories.
+//
+// Default is 0 under MSW, auto-detected by configure.
+//
+// Recommended setting: 1 if you need LZMA compression.
+#cmakedefine01 wxUSE_LIBLZMA
+
+// If enabled, the code written by Apple will be used to write, in a portable
+// way, float on the disk. See extended.c for the license which is different
+// from wxWidgets one.
+//
+// Default is 1.
+//
+// Recommended setting: 1 unless you don't like the license terms (unlikely)
+#cmakedefine01 wxUSE_APPLE_IEEE
+
+// Joystick support class
+#cmakedefine01 wxUSE_JOYSTICK
+
+// wxFontEnumerator class
+#cmakedefine01 wxUSE_FONTENUM
+
+// wxFontMapper class
+#cmakedefine01 wxUSE_FONTMAP
+
+// wxMimeTypesManager class
+#cmakedefine01 wxUSE_MIMETYPE
+
+// wxWebRequest allows usage of system libraries for HTTP(S) requests.
+//
+// Note that for wxWebRequest to be built, at least one of its backends must be
+// available. Under MSW and macOS this will always be the case unless
+// explicitly disabled.
+//
+// Default is 1
+//
+// Recommended setting: 1, setting it to 0 may be useful to avoid dependencies
+// on libcurl on Unix systems.
+#cmakedefine01 wxUSE_WEBREQUEST
+
+// wxWebRequest backend based on NSURLSession
+//
+// Default is 1 under macOS.
+//
+// Recommended setting: 1, can be set to 0 if wxUSE_WEBREQUEST_CURL==1,
+// otherwise wxWebRequest won't be available at all under Mac.
+#ifdef __APPLE__
+#define wxUSE_WEBREQUEST_URLSESSION wxUSE_WEBREQUEST
+#else
+#cmakedefine01 wxUSE_WEBREQUEST_URLSESSION
+#endif
+
+// wxWebRequest backend based on libcurl, can be used under all platforms.
+//
+// Default is 0 for MSW and macOS, detected automatically when using configure.
+//
+// Recommended setting: 0 on Windows and macOS, otherwise 1 as it is required
+// for wxWebRequest to be available at all.
+#cmakedefine01 wxUSE_WEBREQUEST_CURL
+
+// wxProtocol and related classes: if you want to use either of wxFTP, wxHTTP
+// or wxURL you need to set this to 1.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_PROTOCOL
+
+// The settings for the individual URL schemes
+#cmakedefine01 wxUSE_PROTOCOL_FILE
+#cmakedefine01 wxUSE_PROTOCOL_FTP
+#cmakedefine01 wxUSE_PROTOCOL_HTTP
+
+// Define this to use wxURL class.
+#cmakedefine01 wxUSE_URL
+
+// Define this to use native platform url and protocol support.
+// Currently valid only for MS-Windows.
+// Note: if you set this to 1, you can open ftp/http/gopher sites
+// and obtain a valid input stream for these sites
+// even when you set wxUSE_PROTOCOL_FTP/HTTP to 0.
+// Doing so reduces the code size.
+//
+// This code is experimental and subject to change.
+#cmakedefine01 wxUSE_URL_NATIVE
+
+// Support for wxVariant class used in several places throughout the library,
+// notably in wxDataViewCtrl API.
+//
+// Default is 1.
+//
+// Recommended setting: 1 unless you want to reduce the library size as much as
+// possible in which case setting this to 0 can gain up to 100KB.
+#cmakedefine01 wxUSE_VARIANT
+
+// Support for wxAny class, the successor for wxVariant.
+//
+// Default is 1.
+//
+// Recommended setting: 1 unless you want to reduce the library size by a small amount,
+// or your compiler cannot for some reason cope with complexity of templates used.
+#cmakedefine01 wxUSE_ANY
+
+// Support for regular expression matching via wxRegEx class.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_REGEX
+
+// wxSystemOptions class
+#cmakedefine01 wxUSE_SYSTEM_OPTIONS
+
+// wxSound class
+#cmakedefine01 wxUSE_SOUND
+
+// Use wxMediaCtrl
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_MEDIACTRL
+
+// Use wxWidget's XRC XML-based resource system.  Recommended.
+//
+// Default is 1
+//
+// Recommended setting: 1 (requires wxUSE_XML)
+#cmakedefine01 wxUSE_XRC
+
+// XML parsing classes.
+//
+// Default is 1
+//
+// Recommended setting: 1 (required by XRC)
+#cmakedefine01 wxUSE_XML
+
+// Use wxWidget's AUI docking system
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_AUI
+
+// Use wxWidget's Ribbon classes for interfaces
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_RIBBON
+
+// Use wxPropertyGrid.
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_PROPGRID
+
+// Use wxStyledTextCtrl, a wxWidgets Scintilla wrapper.
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_STC
+
+// Use wxWidget's web viewing classes
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_WEBVIEW
+
+#cmakedefine01 wxUSE_WEBVIEW_CHROMIUM
+
+// Use the IE wxWebView backend
+//
+// Default is 1 on MSW
+//
+// Recommended setting: 1
+#ifdef __WXMSW__
+#cmakedefine01 wxUSE_WEBVIEW_IE
+#else
+#cmakedefine01 wxUSE_WEBVIEW_IE
+#endif
+
+// Use the Edge (Chromium) wxWebView backend (Requires WebView2 SDK)
+//
+// Default is 0 because WebView2 is not always available, set it to 1 if you do have it.
+//
+// Recommended setting: 1 when building for Windows with WebView2 SDK
+#cmakedefine01 wxUSE_WEBVIEW_EDGE
+
+// Use the Edge (Chromium) wxWebView backend without loader DLL
+//
+// Default is 0, set it to 1 if you don't want to depend on WebView2Loader.dll.
+//
+// Recommended setting: 0
+#cmakedefine01 wxUSE_WEBVIEW_EDGE_STATIC
+
+// Use the WebKit wxWebView backend
+//
+// Default is 1 on GTK and OSX
+//
+// Recommended setting: 1
+#if (defined(__WXGTK__) && !defined(__WXGTK3__)) || defined(__WXOSX__)
+#cmakedefine01 wxUSE_WEBVIEW_WEBKIT
+#else
+#cmakedefine01 wxUSE_WEBVIEW_WEBKIT
+#endif
+
+// Use the WebKit2 wxWebView backend
+//
+// Default is 1 on GTK3
+//
+// Recommended setting: 1
+#if defined(__WXGTK3__)
+#cmakedefine01 wxUSE_WEBVIEW_WEBKIT2
+#else
+#cmakedefine01 wxUSE_WEBVIEW_WEBKIT2
+#endif
+
+// Enable wxGraphicsContext and related classes for a modern 2D drawing API.
+//
+// Default is 1.
+//
+// Recommended setting: 1, setting it to 0 disables a lot of functionality.
+#cmakedefine01 wxUSE_GRAPHICS_CONTEXT
+
+// Enable wxGraphicsContext implementation using Cairo library.
+//
+// This is not needed under Windows and detected automatically by configure
+// under other systems, however you may set this to 1 manually if you installed
+// Cairo under Windows yourself and prefer to use it instead the native GDI+
+// implementation.
+//
+// Default is 0
+//
+// Recommended setting: 0
+#cmakedefine01 wxUSE_CAIRO
+
+// ----------------------------------------------------------------------------
+// Individual GUI controls
+// ----------------------------------------------------------------------------
+
+// You must set wxUSE_CONTROLS to 1 if you are using any controls at all
+// (without it, wxControl class is not compiled)
+//
+// Default is 1
+//
+// Recommended setting: 1 (don't change except for very special programs)
+#cmakedefine01 wxUSE_CONTROLS
+
+// Support markup in control labels, i.e. provide wxControl::SetLabelMarkup().
+// Currently markup is supported only by a few controls and only some ports but
+// their number will increase with time.
+//
+// Default is 1
+//
+// Recommended setting: 1 (may be set to 0 if you want to save on code size)
+#cmakedefine01 wxUSE_MARKUP
+
+// wxPopupWindow class is a top level transient window. It is currently used
+// to implement wxTipWindow
+//
+// Default is 1
+//
+// Recommended setting: 1 (may be set to 0 if you don't wxUSE_TIPWINDOW)
+#cmakedefine01 wxUSE_POPUPWIN
+
+// wxTipWindow allows to implement the custom tooltips, it is used by the
+// context help classes. Requires wxUSE_POPUPWIN.
+//
+// Default is 1
+//
+// Recommended setting: 1 (may be set to 0)
+#cmakedefine01 wxUSE_TIPWINDOW
+
+// Each of the settings below corresponds to one wxWidgets control. They are
+// all switched on by default but may be disabled if you are sure that your
+// program (including any standard dialogs it can show!) doesn't need them and
+// if you desperately want to save some space. If you use any of these you must
+// set wxUSE_CONTROLS as well.
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_ACTIVITYINDICATOR
+#cmakedefine01 wxUSE_ANIMATIONCTRL
+#cmakedefine01 wxUSE_BANNERWINDOW
+#cmakedefine01 wxUSE_BUTTON
+#cmakedefine01 wxUSE_BMPBUTTON
+#cmakedefine01 wxUSE_CALENDARCTRL
+#cmakedefine01 wxUSE_CHECKBOX
+#cmakedefine01 wxUSE_CHECKLISTBOX
+#cmakedefine01 wxUSE_CHOICE
+#cmakedefine01 wxUSE_COLLPANE
+#cmakedefine01 wxUSE_COLOURPICKERCTRL
+#cmakedefine01 wxUSE_COMBOBOX
+#cmakedefine01 wxUSE_COMMANDLINKBUTTON
+#cmakedefine01 wxUSE_DATAVIEWCTRL
+#cmakedefine01 wxUSE_DATEPICKCTRL
+#cmakedefine01 wxUSE_DIRPICKERCTRL
+#cmakedefine01 wxUSE_EDITABLELISTBOX
+#cmakedefine01 wxUSE_FILECTRL
+#cmakedefine01 wxUSE_FILEPICKERCTRL
+#cmakedefine01 wxUSE_FONTPICKERCTRL
+#cmakedefine01 wxUSE_GAUGE
+#cmakedefine01 wxUSE_HEADERCTRL
+#cmakedefine01 wxUSE_HYPERLINKCTRL
+#cmakedefine01 wxUSE_LISTBOX
+#cmakedefine01 wxUSE_LISTCTRL
+#cmakedefine01 wxUSE_RADIOBOX
+#cmakedefine01 wxUSE_RADIOBTN
+#cmakedefine01 wxUSE_RICHMSGDLG
+#cmakedefine01 wxUSE_SCROLLBAR
+#cmakedefine01 wxUSE_SEARCHCTRL
+#cmakedefine01 wxUSE_SLIDER
+#cmakedefine01 wxUSE_SPINBTN
+#cmakedefine01 wxUSE_SPINCTRL
+#cmakedefine01 wxUSE_STATBOX
+#cmakedefine01 wxUSE_STATLINE
+#cmakedefine01 wxUSE_STATTEXT
+#cmakedefine01 wxUSE_STATBMP
+#cmakedefine01 wxUSE_TEXTCTRL
+#cmakedefine01 wxUSE_TIMEPICKCTRL
+#cmakedefine01 wxUSE_TOGGLEBTN
+#cmakedefine01 wxUSE_TREECTRL
+#cmakedefine01 wxUSE_TREELISTCTRL
+
+// Use generic version of wxDataViewCtrl even if a native one is available?
+//
+// Default is 1.
+//
+// Recommended setting: 1, but can be set to 0 if your program is affected by
+// the native control limitations.
+#cmakedefine01 wxUSE_NATIVE_DATAVIEWCTRL
+
+// Use a status bar class? Depending on the value of wxUSE_NATIVE_STATUSBAR
+// below either wxStatusBar95 or a generic wxStatusBar will be used.
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_STATUSBAR
+
+// Two status bar implementations are available under Win32: the generic one
+// or the wrapper around native control. For native look and feel the native
+// version should be used.
+//
+// Default is 1 for the platforms where native status bar is supported.
+//
+// Recommended setting: 1 (there is no advantage in using the generic one)
+#cmakedefine01 wxUSE_NATIVE_STATUSBAR
+
+// wxToolBar related settings: if wxUSE_TOOLBAR is 0, don't compile any toolbar
+// classes at all. Otherwise, use the native toolbar class unless
+// wxUSE_TOOLBAR_NATIVE is 0.
+//
+// Default is 1 for all settings.
+//
+// Recommended setting: 1 for wxUSE_TOOLBAR and wxUSE_TOOLBAR_NATIVE.
+#cmakedefine01 wxUSE_TOOLBAR
+#cmakedefine01 wxUSE_TOOLBAR_NATIVE
+
+// wxNotebook is a control with several "tabs" located on one of its sides. It
+// may be used to logically organise the data presented to the user instead of
+// putting everything in one huge dialog. It replaces wxTabControl and related
+// classes of wxWin 1.6x.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_NOTEBOOK
+
+// wxListbook control is similar to wxNotebook but uses wxListCtrl instead of
+// the tabs
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_LISTBOOK
+
+// wxChoicebook control is similar to wxNotebook but uses wxChoice instead of
+// the tabs
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_CHOICEBOOK
+
+// wxTreebook control is similar to wxNotebook but uses wxTreeCtrl instead of
+// the tabs
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_TREEBOOK
+
+// wxToolbook control is similar to wxNotebook but uses wxToolBar instead of
+// tabs
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_TOOLBOOK
+
+// wxTaskBarIcon is a small notification icon shown in the system toolbar or
+// dock.
+//
+// Default is 1.
+//
+// Recommended setting: 1 (but can be set to 0 if you don't need it)
+#cmakedefine01 wxUSE_TASKBARICON
+
+// wxGrid class
+//
+// Default is 1, set to 0 to cut down compilation time and binaries size if you
+// don't use it.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_GRID
+
+// wxMiniFrame class: a frame with narrow title bar
+//
+// Default is 1.
+//
+// Recommended setting: 1 (it doesn't cost almost anything)
+#cmakedefine01 wxUSE_MINIFRAME
+
+// wxComboCtrl and related classes: combobox with custom popup window and
+// not necessarily a listbox.
+//
+// Default is 1.
+//
+// Recommended setting: 1 but can be safely set to 0 except for wxUniv where it
+//                      is used by wxComboBox
+#cmakedefine01 wxUSE_COMBOCTRL
+
+// wxOwnerDrawnComboBox is a custom combobox allowing to paint the combobox
+// items.
+//
+// Default is 1.
+//
+// Recommended setting: 1 but can be safely set to 0, except where it is
+//                      needed as a base class for generic wxBitmapComboBox.
+#cmakedefine01 wxUSE_ODCOMBOBOX
+
+// wxBitmapComboBox is a combobox that can have images in front of text items.
+//
+// Default is 1.
+//
+// Recommended setting: 1 but can be safely set to 0
+#cmakedefine01 wxUSE_BITMAPCOMBOBOX
+
+// wxRearrangeCtrl is a wxCheckListBox with two buttons allowing to move items
+// up and down in it. It is also used as part of wxRearrangeDialog.
+//
+// Default is 1.
+//
+// Recommended setting: 1 but can be safely set to 0 (currently used only by
+// wxHeaderCtrl)
+#cmakedefine01 wxUSE_REARRANGECTRL
+
+// wxAddRemoveCtrl is a composite control containing a control showing some
+// items (e.g. wxListBox, wxListCtrl, wxTreeCtrl, wxDataViewCtrl, ...) and "+"/
+// "-" buttons allowing to add and remove items to/from the control.
+//
+// Default is 1.
+//
+// Recommended setting: 1 but can be safely set to 0 if you don't need it (not
+// used by the library itself).
+#cmakedefine01 wxUSE_ADDREMOVECTRL
+
+// ----------------------------------------------------------------------------
+// Miscellaneous GUI stuff
+// ----------------------------------------------------------------------------
+
+// wxAcceleratorTable/Entry classes and support for them in wxMenu(Bar)
+#cmakedefine01 wxUSE_ACCEL
+
+// Use the standard art provider. The icons returned by this provider are
+// embedded into the library as XPMs so disabling it reduces the library size
+// somewhat but this should only be done if you use your own custom art
+// provider returning the icons or never use any icons not provided by the
+// native art provider (which might not be implemented at all for some
+// platforms) or by the Tango icons provider (if it's not itself disabled
+// below).
+//
+// Default is 1.
+//
+// Recommended setting: 1 unless you use your own custom art provider.
+#cmakedefine01 wxUSE_ARTPROVIDER_STD
+
+// Use art provider providing Tango icons: this art provider has higher quality
+// icons than the default one. It uses SVG format which allows much better scaling
+// then when bitmaps are used, at the expense of somewhat larger library size.
+//
+// Default is 1 under non-GTK ports. Under wxGTK the native art provider using
+// the GTK+ stock icons replaces it so it is normally not necessary.
+//
+// Recommended setting: 1 but can be turned off to reduce the library size.
+#cmakedefine01 wxUSE_ARTPROVIDER_TANGO
+
+// Hotkey support (currently Windows and macOS only)
+#cmakedefine01 wxUSE_HOTKEY
+
+// Use wxCaret: a class implementing a "cursor" in a text control (called caret
+// under Windows).
+//
+// Default is 1.
+//
+// Recommended setting: 1 (can be safely set to 0, not used by the library)
+#cmakedefine01 wxUSE_CARET
+
+// Use wxDisplay class: it allows enumerating all displays on a system and
+// their geometries as well as finding the display on which the given point or
+// window lies.
+//
+// Default is 1.
+//
+// Recommended setting: 1 if you need it, can be safely set to 0 otherwise
+#cmakedefine01 wxUSE_DISPLAY
+
+// Miscellaneous geometry code: needed for Canvas library
+#cmakedefine01 wxUSE_GEOMETRY
+
+// Use wxImageList. This class is needed by wxNotebook, wxTreeCtrl and
+// wxListCtrl.
+//
+// Default is 1.
+//
+// Recommended setting: 1 (set it to 0 if you don't use any of the controls
+// enumerated above, then this class is mostly useless too)
+#cmakedefine01 wxUSE_IMAGLIST
+
+// Use wxInfoBar class.
+//
+// Default is 1.
+//
+// Recommended setting: 1 (but can be disabled without problems as nothing
+// depends on it)
+#cmakedefine01 wxUSE_INFOBAR
+
+// Use wxMenu, wxMenuItem.
+//
+// Default is 1.
+//
+// Recommended setting: 1 (can't be disabled under MSW)
+#cmakedefine01 wxUSE_MENUS
+
+// Use wxMenuBar.
+//
+// Default is 1.
+//
+// Recommended setting: 1 (can't be disabled under MSW)
+#cmakedefine01 wxUSE_MENUBAR
+
+// Use wxNotificationMessage.
+//
+// wxNotificationMessage allows to show non-intrusive messages to the user
+// using balloons, banners, popups or whatever is the appropriate method for
+// the current platform.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_NOTIFICATION_MESSAGE
+
+// wxPreferencesEditor provides a common API for different ways of presenting
+// the standard "Preferences" or "Properties" dialog under different platforms
+// (e.g. some use modal dialogs, some use modeless ones; some apply the changes
+// immediately while others require an explicit "Apply" button).
+//
+// Default is 1.
+//
+// Recommended setting: 1 (but can be safely disabled if you don't use it)
+#cmakedefine01 wxUSE_PREFERENCES_EDITOR
+
+// wxFont::AddPrivateFont() allows to use fonts not installed on the system by
+// loading them from font files during run-time.
+//
+// Default is 1 except under Unix where it will be turned off by configure if
+// the required libraries are not available or not new enough.
+//
+// Recommended setting: 1 (but can be safely disabled if you don't use it and
+// want to avoid extra dependencies under Linux, for example).
+#cmakedefine01 wxUSE_PRIVATE_FONTS
+
+// wxRichToolTip is a customizable tooltip class which has more functionality
+// than the stock (but native, unlike this class) wxToolTip.
+//
+// Default is 1.
+//
+// Recommended setting: 1 (but can be safely set to 0 if you don't need it)
+#cmakedefine01 wxUSE_RICHTOOLTIP
+
+// Use wxSashWindow class.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_SASH
+
+// Use wxSplitterWindow class.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_SPLITTER
+
+// Use wxToolTip and wxWindow::Set/GetToolTip() methods.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_TOOLTIPS
+
+// wxValidator class and related methods
+#cmakedefine01 wxUSE_VALIDATORS
+
+// Use reference counted ID management: this means that wxWidgets will track
+// the automatically allocated ids (those used when you use wxID_ANY when
+// creating a window, menu or toolbar item &c) instead of just supposing that
+// the program never runs out of them. This is mostly useful only under wxMSW
+// where the total ids range is limited to SHRT_MIN..SHRT_MAX and where
+// long-running programs can run into problems with ids reuse without this. On
+// the other platforms, where the ids have the full int range, this shouldn't
+// be necessary.
+#ifdef __WXMSW__
+#cmakedefine01 wxUSE_AUTOID_MANAGEMENT
+#else
+#cmakedefine01 wxUSE_AUTOID_MANAGEMENT
+#endif
+
+// ----------------------------------------------------------------------------
+// common dialogs
+// ----------------------------------------------------------------------------
+
+// wxBusyInfo displays window with message when app is busy. Works in same way
+// as wxBusyCursor
+#cmakedefine01 wxUSE_BUSYINFO
+
+// Use single/multiple choice dialogs.
+//
+// Default is 1
+//
+// Recommended setting: 1 (used in the library itself)
+#cmakedefine01 wxUSE_CHOICEDLG
+
+// Use colour picker dialog
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_COLOURDLG
+
+// wxDirDlg class for getting a directory name from user
+#cmakedefine01 wxUSE_DIRDLG
+
+// Use file open/save dialogs.
+//
+// Default is 1
+//
+// Recommended setting: 1 (used in many places in the library itself)
+#cmakedefine01 wxUSE_FILEDLG
+
+// Use find/replace dialogs.
+//
+// Default is 1
+//
+// Recommended setting: 1 (but may be safely set to 0)
+#cmakedefine01 wxUSE_FINDREPLDLG
+
+// Use font picker dialog
+//
+// Default is 1
+//
+// Recommended setting: 1 (used in the library itself)
+#cmakedefine01 wxUSE_FONTDLG
+
+// Use wxMessageDialog and wxMessageBox.
+//
+// Default is 1
+//
+// Recommended setting: 1 (used in the library itself)
+#cmakedefine01 wxUSE_MSGDLG
+
+// progress dialog class for lengthy operations
+#cmakedefine01 wxUSE_PROGRESSDLG
+
+// Set to 0 to disable the use of the native progress dialog (currently only
+// available under MSW and suffering from some bugs there, hence this option).
+#cmakedefine01 wxUSE_NATIVE_PROGRESSDLG
+
+// support for startup tips (wxShowTip &c)
+#cmakedefine01 wxUSE_STARTUP_TIPS
+
+// text entry dialog and wxGetTextFromUser function
+#cmakedefine01 wxUSE_TEXTDLG
+
+// number entry dialog
+#cmakedefine01 wxUSE_NUMBERDLG
+
+// credential entry dialog
+#cmakedefine01 wxUSE_CREDENTIALDLG
+
+// splash screen class
+#cmakedefine01 wxUSE_SPLASH
+
+// wizards
+#cmakedefine01 wxUSE_WIZARDDLG
+
+// Compile in wxAboutBox() function showing the standard "About" dialog.
+//
+// Default is 1
+//
+// Recommended setting: 1 but can be set to 0 to save some space if you don't
+//                      use this function
+#cmakedefine01 wxUSE_ABOUTDLG
+
+// wxFileHistory class
+//
+// Default is 1
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_FILE_HISTORY
+
+// ----------------------------------------------------------------------------
+// Metafiles support
+// ----------------------------------------------------------------------------
+
+// Windows supports the graphics format known as metafile which, though not
+// portable, is widely used under Windows and so is supported by wxWidgets
+// (under Windows only, of course). Both the so-called "Window MetaFiles" or
+// WMFs, and "Enhanced MetaFiles" or EMFs are supported in wxWin and, by
+// default, EMFs will be used. This may be changed by setting
+// wxUSE_WIN_METAFILES_ALWAYS to 1 and/or setting wxUSE_ENH_METAFILE to 0.
+// You may also set wxUSE_METAFILE to 0 to not compile in any metafile
+// related classes at all.
+//
+// Default is 1 for wxUSE_ENH_METAFILE and 0 for wxUSE_WIN_METAFILES_ALWAYS.
+//
+// Recommended setting: default or 0 for everything for portable programs.
+#cmakedefine01 wxUSE_METAFILE
+#cmakedefine01 wxUSE_ENH_METAFILE
+#cmakedefine01 wxUSE_WIN_METAFILES_ALWAYS
+
+// ----------------------------------------------------------------------------
+// Big GUI components
+// ----------------------------------------------------------------------------
+
+// Set to 0 to disable MDI support.
+//
+// Requires wxUSE_NOTEBOOK under platforms other than MSW.
+//
+// Default is 1.
+//
+// Recommended setting: 1, can be safely set to 0.
+#cmakedefine01 wxUSE_MDI
+
+// Set to 0 to disable document/view architecture
+#cmakedefine01 wxUSE_DOC_VIEW_ARCHITECTURE
+
+// Set to 0 to disable MDI document/view architecture
+//
+// Requires wxUSE_MDI && wxUSE_DOC_VIEW_ARCHITECTURE
+#cmakedefine01 wxUSE_MDI_ARCHITECTURE
+
+// Set to 0 to disable print/preview architecture code
+#cmakedefine01 wxUSE_PRINTING_ARCHITECTURE
+
+// wxHTML allows displaying simple HTML.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_HTML
+
+// Setting wxUSE_GLCANVAS to 1 enables OpenGL support. You need to have OpenGL
+// headers and libraries to be able to compile the library with wxUSE_GLCANVAS
+// set to 1 and, under Windows, also to add opengl32.lib and glu32.lib to the
+// list of libraries used to link your application when linking to wxWidgets
+// statically (although this is done implicitly for Microsoft Visual C++ users).
+//
+// Default is 1.
+//
+// Recommended setting: 1 if you intend to use OpenGL, can be safely set to 0
+// otherwise.
+#cmakedefine01 wxUSE_GLCANVAS
+
+// Setting wxUSE_GLCANVAS_EGL to 1 enables OpenGL EGL backend. This will be
+// automatically enabled if EGL support is detected.  EGL support is only
+// available under Unix platforms.
+//
+// Default is 0.
+#cmakedefine01 wxUSE_GLCANVAS_EGL
+
+// wxRichTextCtrl allows editing of styled text.
+//
+// Default is 1.
+//
+// Recommended setting: 1, set to 0 if you want compile a
+// smaller library.
+#cmakedefine01 wxUSE_RICHTEXT
+
+// ----------------------------------------------------------------------------
+// Data transfer
+// ----------------------------------------------------------------------------
+
+// Use wxClipboard class for clipboard copy/paste.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_CLIPBOARD
+
+// Use wxDataObject and related classes. Needed for clipboard and OLE drag and
+// drop
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_DATAOBJ
+
+// Use wxDropTarget and wxDropSource classes for drag and drop (this is
+// different from "built in" drag and drop in wxTreeCtrl which is always
+// available). Requires wxUSE_DATAOBJ.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_DRAG_AND_DROP
+
+// Use wxAccessible for enhanced and customisable accessibility.
+// Depends on wxUSE_OLE on MSW.
+//
+// Default is 1 on MSW, 0 elsewhere.
+//
+// Recommended setting (at present): 1 (MSW-only)
+#ifdef __WXMSW__
+#cmakedefine01 wxUSE_ACCESSIBILITY
+#else
+#cmakedefine01 wxUSE_ACCESSIBILITY
+#endif
+
+// ----------------------------------------------------------------------------
+// miscellaneous settings
+// ----------------------------------------------------------------------------
+
+// wxSingleInstanceChecker class allows to verify at startup if another program
+// instance is running.
+//
+// Default is 1
+//
+// Recommended setting: 1 (the class is tiny, disabling it won't save much
+// space)
+#cmakedefine01 wxUSE_SNGLINST_CHECKER
+
+#cmakedefine01 wxUSE_DRAGIMAGE
+
+// 0 for no interprocess comms
+#cmakedefine01 wxUSE_IPC
+
+// 0 for no help facility
+#cmakedefine01 wxUSE_HELP
+
+// Should we use MS HTML help for wxHelpController? If disabled, neither
+// wxCHMHelpController nor wxBestHelpController are available.
+//
+// Default is 1 under MSW, 0 is always used for the other platforms.
+//
+// Recommended setting: 1, only set to 0 if you have trouble compiling
+// wxCHMHelpController (could be a problem with really ancient compilers)
+#cmakedefine01 wxUSE_MS_HTML_HELP
+
+// Use wxHTML-based help controller?
+#cmakedefine01 wxUSE_WXHTML_HELP
+
+// 0 for no window layout constraint system
+#cmakedefine01 wxUSE_CONSTRAINTS
+
+// 0 for no splines
+#cmakedefine01 wxUSE_SPLINES
+
+// Include mouse wheel support
+#cmakedefine01 wxUSE_MOUSEWHEEL
+
+// Compile wxUIActionSimulator class?
+#cmakedefine01 wxUSE_UIACTIONSIMULATOR
+
+// ----------------------------------------------------------------------------
+// wxDC classes for various output formats
+// ----------------------------------------------------------------------------
+
+// Set to 1 for PostScript device context.
+#cmakedefine01 wxUSE_POSTSCRIPT
+
+// Set to 1 to use font metric files in GetTextExtent
+#cmakedefine01 wxUSE_AFM_FOR_POSTSCRIPT
+
+// Set to 1 to compile in support for wxSVGFileDC, a wxDC subclass which allows
+// to create files in SVG (Scalable Vector Graphics) format.
+#cmakedefine01 wxUSE_SVG
+
+// Should wxDC provide SetTransformMatrix() and related methods?
+//
+// Default is 1 but can be set to 0 if this functionality is not used. Notice
+// that currently wxMSW, wxGTK3 support this for wxDC and all platforms support
+// this for wxGCDC so setting this to 0 doesn't change much if neither of these
+// is used (although it will still save a few bytes probably).
+//
+// Recommended setting: 1.
+#cmakedefine01 wxUSE_DC_TRANSFORM_MATRIX
+
+// ----------------------------------------------------------------------------
+// image format support
+// ----------------------------------------------------------------------------
+
+// wxImage supports many different image formats which can be configured at
+// compile-time. BMP is always supported, others are optional and can be safely
+// disabled if you don't plan to use images in such format sometimes saving
+// substantial amount of code in the final library.
+//
+// Some formats require an extra library (e.g. libpng) which is always included in
+// wxWidgets sources but some build systems (cmake, configure) can be configured to
+// to use the system or user-provided version.
+//
+// Set to 1 for wxImage support (recommended).
+#cmakedefine01 wxUSE_IMAGE
+
+// Set to 1 for PNG format support. Also requires wxUSE_ZLIB.
+#cmakedefine01 wxUSE_LIBPNG
+
+// Set to 1 for JPEG format support
+#cmakedefine01 wxUSE_LIBJPEG
+
+// Set to 1 for TIFF format support
+#cmakedefine01 wxUSE_LIBTIFF
+
+// Set to 1 for SVG rasterizing support using LunaSVG
+#cmakedefine01 wxUSE_LUNASVG
+
+// Set to 1 for SVG rasterizing support using nanosvg. Ignored if wxUSE_LUNASVG is 1.
+#cmakedefine01 wxUSE_NANOSVG
+
+// Set to 1 to use external nanosvg library when wxUSE_NANOSVG is enabled
+#cmakedefine01 wxUSE_NANOSVG_EXTERNAL
+
+// Set to 1 for TGA format support (loading only)
+#cmakedefine01 wxUSE_TGA
+
+// Set to 1 for GIF format support
+#cmakedefine01 wxUSE_GIF
+
+// Set to 1 for PNM format support
+#cmakedefine01 wxUSE_PNM
+
+// Set to 1 for PCX format support
+#cmakedefine01 wxUSE_PCX
+
+// Set to 1 for IFF format support (Amiga format)
+#cmakedefine01 wxUSE_IFF
+
+// Set to 1 for XPM format support
+#cmakedefine01 wxUSE_XPM
+
+// Set to 1 for MS Icons and Cursors format support
+#cmakedefine01 wxUSE_ICO_CUR
+
+// Set to 1 to compile in wxPalette class
+#cmakedefine01 wxUSE_PALETTE
+
+// ----------------------------------------------------------------------------
+// wxUniversal-only options
+// ----------------------------------------------------------------------------
+
+// Set to 1 to enable compilation of all themes, this is the default
+#cmakedefine01 wxUSE_ALL_THEMES
+
+// Set to 1 to enable the compilation of individual theme if wxUSE_ALL_THEMES
+// is unset, if it is set these options are not used; notice that metal theme
+// uses Win32 one
+#cmakedefine01 wxUSE_THEME_GTK
+#cmakedefine01 wxUSE_THEME_METAL
+#cmakedefine01 wxUSE_THEME_MONO
+#cmakedefine01 wxUSE_THEME_WIN32
+
+// ----------------------------------------------------------------------------
+// Unix-specific options
+// ----------------------------------------------------------------------------
+#cmakedefine01 wxUSE_SELECT_DISPATCHER
+#cmakedefine01 wxUSE_EPOLL_DISPATCHER
+
+// Use debug version of CEF in wxWebViewChromium.
+#cmakedefine wxHAVE_CEF_DEBUG
+
+// Use GStreamer for Unix.
+//
+// Default is 0 as this requires a lot of dependencies which might not be
+// available.
+//
+// Recommended setting: 1 (wxMediaCtrl won't work by default without it).
+#cmakedefine01 wxUSE_GSTREAMER
+
+#cmakedefine01 wxUSE_GSTREAMER_PLAYER
+
+// Use XTest extension to implement wxUIActionSimulator?
+//
+// Default is 1, it is set to 0 if the necessary headers/libraries are not
+// found by configure.
+//
+// Recommended setting: 1, wxUIActionSimulator won't work in wxGTK3 without it.
+#cmakedefine01 wxUSE_XTEST
+
+// ----------------------------------------------------------------------------
+// MSW options
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
+// Windows-specific backends choices
+// ----------------------------------------------------------------------------
+
+// The options here are only taken into account if wxUSE_GRAPHICS_CONTEXT is 1.
+
+// Enable support for GDI+-based implementation of wxGraphicsContext.
+//
+// Default is 1.
+//
+// Recommended setting: 1 if you need to support XP, as Direct2D is not
+// available there.
+#define wxUSE_GRAPHICS_GDIPLUS wxUSE_GRAPHICS_CONTEXT
+
+// Enable support for Direct2D-based implementation of wxGraphicsContext.
+//
+// Default is 1 for compilers which support it, i.e. MSVS currently. If you
+// use another compiler and installed the necessary SDK components manually,
+// you need to change this setting.
+//
+// Recommended setting: 1 for faster and better quality graphics.
+#if defined(_MSC_VER)
+    #define wxUSE_GRAPHICS_DIRECT2D wxUSE_GRAPHICS_CONTEXT
+#else
+    #cmakedefine01 wxUSE_GRAPHICS_DIRECT2D
+#endif
+
+// wxWebRequest backend based on WinHTTP.
+//
+// This is only taken into account if wxUSE_WEBREQUEST==1.
+//
+// Default is 1 if supported by the compiler (MSVS or MinGW64).
+//
+// Recommended setting: 1, can be set to 0 if wxUSE_WEBREQUEST_CURL==1,
+// otherwise wxWebRequest won't be available at all.
+#cmakedefine01 wxUSE_WEBREQUEST_WINHTTP
+
+// ----------------------------------------------------------------------------
+// Windows-only settings
+// ----------------------------------------------------------------------------
+
+// Set this to 1 for generic OLE support: this is required for drag-and-drop,
+// clipboard, OLE Automation. Only set it to 0 if your compiler is very old and
+// can't compile/doesn't have the OLE headers.
+//
+// Default is 1.
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_OLE
+
+// Set this to 1 to enable wxAutomationObject class.
+//
+// Default is 1.
+//
+// Recommended setting: 1 if you need to control other applications via OLE
+// Automation, can be safely set to 0 otherwise
+#cmakedefine01 wxUSE_OLE_AUTOMATION
+
+// Set this to 1 to enable wxActiveXContainer class allowing to embed OLE
+// controls in wx.
+//
+// Default is 1.
+//
+// Recommended setting: 1, required by wxMediaCtrl
+#cmakedefine01 wxUSE_ACTIVEX
+
+// Enable WinRT support
+//
+// Default is 1 for compilers which support it, i.e. MSVS currently.
+//
+// Recommended setting: 1
+#if defined(_MSC_VER)
+    #cmakedefine01 wxUSE_WINRT
+#else
+    #cmakedefine01 wxUSE_WINRT
+#endif
+
+// wxDC caching implementation
+#cmakedefine01 wxUSE_DC_CACHEING
+
+// Set this to 1 to enable wxDIB class used internally for manipulating
+// wxBitmap data.
+//
+// Default is 1, set it to 0 only if you don't use wxImage either
+//
+// Recommended setting: 1 (without it conversion to/from wxImage won't work)
+#cmakedefine01 wxUSE_WXDIB
+
+// Set to 0 to disable PostScript print/preview architecture code under Windows
+// (just use Windows printing).
+#cmakedefine01 wxUSE_POSTSCRIPT_ARCHITECTURE_IN_MSW
+
+// Set this to 1 to compile in wxRegKey class.
+//
+// Default is 1
+//
+// Recommended setting: 1, this is used internally by wx in a few places
+#cmakedefine01 wxUSE_REGKEY
+
+// Set this to 1 to use RICHEDIT controls for wxTextCtrl with style wxTE_RICH
+// which allows to put more than ~32Kb of text in it even under Win9x (NT
+// doesn't have such limitation).
+//
+// Default is 1 for compilers which support it
+//
+// Recommended setting: 1, only set it to 0 if your compiler doesn't have
+//                      or can't compile <richedit.h>
+#cmakedefine01 wxUSE_RICHEDIT
+
+// Set this to 1 to use extra features of richedit v2 and later controls
+//
+// Default is 1 for compilers which support it
+//
+// Recommended setting: 1
+#cmakedefine01 wxUSE_RICHEDIT2
+
+// Set this to 1 to enable support for the owner-drawn menu and listboxes. This
+// is required by wxUSE_CHECKLISTBOX.
+//
+// Default is 1.
+//
+// Recommended setting: 1, set to 0 for a small library size reduction
+#cmakedefine01 wxUSE_OWNER_DRAWN
+
+// Set this to 1 to enable MSW-specific wxTaskBarIcon::ShowBalloon() method. It
+// is required by native wxNotificationMessage implementation.
+//
+// Default is 1 but disabled in wx/msw/chkconf.h if SDK is too old to contain
+// the necessary declarations.
+//
+// Recommended setting: 1, set to 0 for a tiny library size reduction
+#cmakedefine01 wxUSE_TASKBARICON_BALLOONS
+
+// Set this to 1 to enable following functionality added in Windows 7: thumbnail
+// representations, thumbnail toolbars, notification and status overlays,
+// progress indicators and jump lists.
+//
+// Default is 1.
+//
+// Recommended setting: 1, set to 0 for a tiny library size reduction
+#cmakedefine01 wxUSE_TASKBARBUTTON
+
+// Set to 1 to compile MS Windows XP theme engine support
+#cmakedefine01 wxUSE_UXTHEME
+
+// Set to 1 to use InkEdit control (Tablet PC), if available
+#cmakedefine01 wxUSE_INKEDIT
+
+// Set to 1 to enable .INI files based wxConfig implementation (wxIniConfig)
+//
+// Default is 0.
+//
+// Recommended setting: 0, nobody uses .INI files any more
+#cmakedefine01 wxUSE_INICONF
+
+// Set to 0 if you need to include <winsock.h> rather than <winsock2.h>
+//
+// Default is 1.
+//
+// Recommended setting: 1, required to be 1 if wxUSE_IPV6 is 1.
+#cmakedefine01 wxUSE_WINSOCK2
+
+// ----------------------------------------------------------------------------
+// Generic versions of native controls
+// ----------------------------------------------------------------------------
+
+// Set this to 1 to be able to use wxDatePickerCtrlGeneric in addition to the
+// native wxDatePickerCtrl
+//
+// Default is 0.
+//
+// Recommended setting: 0, this is mainly used for testing
+#cmakedefine01 wxUSE_DATEPICKCTRL_GENERIC
+
+// Set this to 1 to be able to use wxTimePickerCtrlGeneric in addition to the
+// native wxTimePickerCtrl for the platforms that have the latter (MSW).
+//
+// Default is 0.
+//
+// Recommended setting: 0, this is mainly used for testing
+#cmakedefine01 wxUSE_TIMEPICKCTRL_GENERIC
+
+// ----------------------------------------------------------------------------
+// Crash debugging helpers
+// ----------------------------------------------------------------------------
+
+// Set this to 1 to use dbghelp.dll for providing stack traces in crash
+// reports.
+//
+// Default is 1 if the compiler supports it, 0 for old MinGW.
+//
+// Recommended setting: 1, there is not much gain in disabling this
+#if defined(__VISUALC__) || defined(__MINGW64_TOOLCHAIN__)
+    #cmakedefine01 wxUSE_DBGHELP
+#else
+    #cmakedefine01 wxUSE_DBGHELP
+#endif
+
+// Set this to 1 to be able to use wxCrashReport::Generate() to create mini
+// dumps of your program when it crashes (or at any other moment)
+//
+// Default is 1 if supported by the compiler (VC++ and recent BC++ only).
+//
+// Recommended setting: 1, set to 0 if your programs never crash
+#cmakedefine01 wxUSE_CRASHREPORT
+
+// Define if your compiler has C99 va_copy
+#cmakedefine HAVE_VA_COPY 1
+
+// Define if va_list type is an array
+#cmakedefine VA_LIST_IS_ARRAY 1
+
+// Define if the compiler supports simple visibility declarations.
+#cmakedefine HAVE_VISIBILITY 1
+
+// Define if the compiler supports GCC's atomic memory access builtins
+#cmakedefine HAVE_GCC_ATOMIC_BUILTINS 1
+
+// Define if compiler's visibility support in libstdc++ is broken
+#cmakedefine HAVE_BROKEN_LIBSTDCXX_VISIBILITY
+
+// Use SDL for audio (Unix)
+#cmakedefine01 wxUSE_LIBSDL
+
+// Compile sound backends as plugins
+#cmakedefine01 wxUSE_PLUGINS
+
+// Use GTK print for printing under GTK+ 2.10+
+#cmakedefine01 wxUSE_GTKPRINT
+
+// Use GNOME VFS for MIME types
+#cmakedefine01 wxUSE_LIBGNOMEVFS
+
+// Use libnotify library.
+#cmakedefine01 wxUSE_LIBNOTIFY
+
+// Use libnotify 0.7+ API.
+#cmakedefine01 wxUSE_LIBNOTIFY_0_7
+
+// Use libXpm
+#cmakedefine01 wxHAVE_LIB_XPM
+
+// Define if you have pthread_cleanup_push/pop()
+#cmakedefine wxHAVE_PTHREAD_CLEANUP 1
+
+// Define if compiler has __thread keyword.
+#cmakedefine HAVE___THREAD_KEYWORD 1
+
+// Define if large (64 bit file offsets) files are supported.
+#cmakedefine HAVE_LARGEFILE_SUPPORT 1
+
+// Use OpenGL
+#cmakedefine01 wxUSE_OPENGL
+
+// Use MS HTML Help via libmspack (Unix)
+#cmakedefine01 wxUSE_LIBMSPACK
+
+// Matthews garbage collection (used for MrEd?)
+#cmakedefine01 WXGARBAGE_COLLECTION_ON
+
+// wxWebKitCtrl
+#cmakedefine01 wxUSE_WEBKIT
+
+// use the session manager to detect KDE/GNOME
+#cmakedefine01 wxUSE_DETECT_SM
+
+// define with the name of timezone variable
+#cmakedefine WX_TIMEZONE @WX_TIMEZONE@
+
+// The type of 3rd argument to getsockname() - usually size_t or int
+#cmakedefine WX_SOCKLEN_T @WX_SOCKLEN_T@
+
+// The type of 5th argument to getsockopt() - usually size_t or int
+#cmakedefine SOCKOPTLEN_T @SOCKOPTLEN_T@
+
+// The type of statvfs(2) argument
+#cmakedefine WX_STATFS_T @WX_STATFS_T@
+
+// gettimeofday() usually takes 2 arguments, but some really old systems might have only one, in
+// which case define WX_GETTIMEOFDAY_NO_TZ
+#cmakedefine WX_GETTIMEOFDAY_NO_TZ 1
+
+// struct tm doesn't always have the tm_gmtoff field, define this if it does
+#cmakedefine WX_GMTOFF_IN_TM 1
+
+// check if nl_langinfo() can be called with argument _NL_TIME_FIRST_WEEKDAY
+#cmakedefine HAVE_NL_TIME_FIRST_WEEKDAY 1
+
+// Define if you have poll(2) function
+#cmakedefine HAVE_POLL 1
+
+// Define if you have pw_gecos field in struct passwd
+#cmakedefine HAVE_PW_GECOS 1
+
+// Define if you have __cxa_demangle() in <cxxabi.h>
+#cmakedefine HAVE_CXA_DEMANGLE 1
+
+// Define if you have dlopen()
+#cmakedefine HAVE_DLOPEN 1
+
+// Define if you have gettimeofday()
+#cmakedefine HAVE_GETTIMEOFDAY 1
+
+// Define if fsync() is available
+#cmakedefine HAVE_FSYNC 1
+
+// Define if you have ftime()
+#cmakedefine HAVE_FTIME 1
+
+// Define if you have nanosleep()
+#cmakedefine HAVE_NANOSLEEP 1
+
+// Define if you have sched_yield
+#cmakedefine HAVE_SCHED_YIELD 1
+
+// Define if you have pthread_mutexattr_t and functions to work with it
+#cmakedefine HAVE_PTHREAD_MUTEXATTR_T 1
+
+// Define if you have pthread_mutexattr_settype() declaration
+#cmakedefine HAVE_PTHREAD_MUTEXATTR_SETTYPE_DECL 1
+
+// Define if you have PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
+#cmakedefine HAVE_PTHREAD_RECURSIVE_MUTEX_INITIALIZER 1
+
+// Define if you have pthread_cancel
+#cmakedefine HAVE_PTHREAD_CANCEL 1
+
+// Define if you have pthread_mutex_timedlock
+#cmakedefine HAVE_PTHREAD_MUTEX_TIMEDLOCK 1
+
+// Define if you have pthread_attr_setstacksize
+#cmakedefine HAVE_PTHREAD_ATTR_SETSTACKSIZE 1
+
+// Define if you have snprintf()
+#cmakedefine HAVE_SNPRINTF 1
+
+// Define if you have a snprintf() which supports positional arguments (defined in the unix98
+// standard)
+#cmakedefine HAVE_UNIX98_PRINTF 1
+
+// define if you have statfs function
+#cmakedefine HAVE_STATFS 1
+
+// define if you have statfs prototype
+#cmakedefine HAVE_STATFS_DECL 1
+
+// define if you have statvfs function
+#cmakedefine HAVE_STATVFS 1
+
+// Define if you have all functions to set thread priority
+#cmakedefine HAVE_THREAD_PRIORITY_FUNCTIONS 1
+
+// Define if you have vsnprintf()
+#cmakedefine HAVE_VSNPRINTF 1
+
+// Define if you have a _broken_ vsnprintf() declaration in the header, with 'char*' for the 3rd
+// parameter instead of 'const char*'
+#cmakedefine HAVE_BROKEN_VSNPRINTF_DECL 1
+
+// Define if you have a _broken_ vsscanf() declaration in the header, with 'char*' for the 1st
+// parameter instead of 'const char*'
+#cmakedefine HAVE_BROKEN_VSSCANF_DECL 1
+
+// Define if you have vsscanf()
+#cmakedefine HAVE_VSSCANF 1
+
+// Define if you have usleep()
+#cmakedefine HAVE_USLEEP 1
+
+// Define if you have wcscasecmp() function
+#cmakedefine HAVE_WCSCASECMP 1
+
+// Define if you have wcsncasecmp() function
+#cmakedefine HAVE_WCSNCASECMP 1
+
+// Define if you have wcslen function
+#cmakedefine HAVE_WCSLEN 1
+
+// Define if you have wcsdup function
+#cmakedefine HAVE_WCSDUP 1
+
+// Define if you have wcsftime() function
+#cmakedefine HAVE_WCSFTIME 1
+
+// Define if you have strnlen() function
+#cmakedefine HAVE_STRNLEN 1
+
+// Define if you have wcsnlen() function
+#cmakedefine HAVE_WCSNLEN 1
+
+// The number of bytes in a wchar_t.
+@SIZEOF_WCHAR_T_CODE@
+
+// The number of bytes in a int.
+@SIZEOF_INT_CODE@
+
+// The number of bytes in a pointer.
+#define SIZEOF_VOID_P @CMAKE_SIZEOF_VOID_P@
+
+// The number of bytes in a long.
+@SIZEOF_LONG_CODE@
+
+// The number of bytes in a long long.
+@SIZEOF_LONG_LONG_CODE@
+
+// The number of bytes in a short.
+@SIZEOF_SHORT_CODE@
+
+// The number of bytes in a size_t.
+@SIZEOF_SIZE_T_CODE@
+
+// Define if size_t on your machine is the same type as unsigned int.
+#cmakedefine wxSIZE_T_IS_UINT 1
+
+// Define if size_t on your machine is the same type as unsigned long.
+#cmakedefine wxSIZE_T_IS_ULONG 1
+
+// Define if wchar_t is distinct type in your compiler.
+#cmakedefine wxWCHAR_T_IS_REAL_TYPE 1
+
+// Define if you have the dladdr function.
+#cmakedefine HAVE_DLADDR 1
+
+// Define if you have Posix fnctl() function.
+#cmakedefine HAVE_FCNTL 1
+
+// Define if you have BSD flock() function.
+#cmakedefine HAVE_FLOCK 1
+
+// Define if you have getaddrinfo function.
+#cmakedefine HAVE_GETADDRINFO 1
+
+// Define if you have a gethostbyname_r function taking 6 arguments.
+#cmakedefine HAVE_FUNC_GETHOSTBYNAME_R_6 1
+
+// Define if you have a gethostbyname_r function taking 5 arguments.
+#cmakedefine HAVE_FUNC_GETHOSTBYNAME_R_5 1
+
+// Define if you have a gethostbyname_r function taking 3 arguments.
+#cmakedefine HAVE_FUNC_GETHOSTBYNAME_R_3 1
+
+// Define if you only have a gethostbyname function
+#cmakedefine HAVE_GETHOSTBYNAME 1
+
+// Define if you have the gethostname function.
+#cmakedefine HAVE_GETHOSTNAME 1
+
+// Define if you have a getservbyname_r function taking 6 arguments.
+#cmakedefine HAVE_FUNC_GETSERVBYNAME_R_6 1
+
+// Define if you have a getservbyname_r function taking 5 arguments.
+#cmakedefine HAVE_FUNC_GETSERVBYNAME_R_5 1
+
+// Define if you have a getservbyname_r function taking 4 arguments.
+#cmakedefine HAVE_FUNC_GETSERVBYNAME_R_4 1
+
+// Define if you only have a getservbyname function
+#cmakedefine HAVE_GETSERVBYNAME 1
+
+// Define if you have the gmtime_r function.
+#cmakedefine HAVE_GMTIME_R 1
+
+// Define if you have the inet_addr function.
+#cmakedefine HAVE_INET_ADDR 1
+
+// Define if you have the inet_aton function.
+#cmakedefine HAVE_INET_ATON 1
+
+// Define if you have the localtime_r function.
+#cmakedefine HAVE_LOCALTIME_R 1
+
+// Define if you have the mktemp function.
+#cmakedefine HAVE_MKTEMP 1
+
+// Define if you have the mkstemp function.
+#cmakedefine HAVE_MKSTEMP 1
+
+// Define if you have the putenv function.
+#cmakedefine HAVE_PUTENV 1
+
+// Define if you have the setenv function.
+#cmakedefine HAVE_SETENV 1
+
+// Define if you have strtok_r function.
+#cmakedefine HAVE_STRTOK_R 1
+
+// Define if you have thr_setconcurrency function
+#cmakedefine HAVE_THR_SETCONCURRENCY 1
+
+// Define if you have pthread_setconcurrency function
+#cmakedefine HAVE_PTHREAD_SET_CONCURRENCY 1
+
+// Define if you have the uname function.
+#cmakedefine HAVE_UNAME 1
+
+// Define if you have the unsetenv function.
+#cmakedefine HAVE_UNSETENV 1
+
+// Define if you have the <X11/XKBlib.h> header file.
+#cmakedefine HAVE_X11_XKBLIB_H 1
+
+// Define if you have the <X11/extensions/xf86vmode.h> header file.
+#cmakedefine HAVE_X11_EXTENSIONS_XF86VMODE_H 1
+
+// Define if you have the <sched.h> header file.
+#cmakedefine HAVE_SCHED_H 1
+
+// Define if you have the <unistd.h> header file.
+#cmakedefine HAVE_UNISTD_H 1
+
+// Define if you have the <fcntl.h> header file.
+#cmakedefine HAVE_FCNTL_H 1
+
+// Define if you have the <wchar.h> header file.
+#cmakedefine HAVE_WCHAR_H 1
+
+// Define if you have the <wcstr.h> header file.
+#cmakedefine HAVE_WCSTR_H 1
+
+// Define if you have <widec.h> (Solaris only)
+#cmakedefine HAVE_WIDEC_H 1
+
+// Define if you have the <iconv.h> header file and iconv() symbol.
+#cmakedefine HAVE_ICONV 1
+
+// Define as "const" if the declaration of iconv() needs const.
+#cmakedefine ICONV_CONST @ICONV_CONST@
+
+// Define if you have the <langinfo.h> header file.
+#cmakedefine HAVE_LANGINFO_H 1
+
+// Define if you have the <sys/soundcard.h> header file.
+#cmakedefine HAVE_SYS_SOUNDCARD_H 1
+
+// Define if you have wcsrtombs() function
+#cmakedefine HAVE_WCSRTOMBS 1
+
+// Define this if you have putws()
+#cmakedefine HAVE_PUTWS 1
+
+// Define this if you have fputws()
+#cmakedefine HAVE_FPUTWS 1
+
+// Define this if you have wprintf() and related functions
+#cmakedefine HAVE_WPRINTF 1
+
+// Define this if you have vswprintf() and related functions
+#cmakedefine HAVE_VSWPRINTF 1
+
+// Define this if you have _vsnwprintf
+#cmakedefine HAVE__VSNWPRINTF 1
+
+// vswscanf()
+#cmakedefine HAVE_VSWSCANF 1
+
+// Define if fseeko and ftello are available.
+#cmakedefine HAVE_FSEEKO 1
+
+// Define this if you are using gtk and gdk contains support for X11R6 XIM
+#cmakedefine HAVE_XIM 1
+
+// Define this if you have X11/extensions/shape.h
+#cmakedefine HAVE_XSHAPE 1
+
+// Define this if you have type SPBCDATA
+#cmakedefine HAVE_SPBCDATA 1
+
+// Define if you have pango_font_family_is_monospace() (Pango >= 1.3.3)
+#cmakedefine HAVE_PANGO_FONT_FAMILY_IS_MONOSPACE 1
+
+// Define if you have Pango xft support
+#cmakedefine HAVE_PANGO_XFT 1
+
+// Define if you have the <sys/select.h> header file.
+#cmakedefine HAVE_SYS_SELECT_H 1
+
+// Define if you have abi::__forced_unwind in your <cxxabi.h>.
+#cmakedefine HAVE_ABI_FORCEDUNWIND 1
+
+// Define if fdopen is available.
+#cmakedefine HAVE_FDOPEN 1
+
+// Define if sysconf is available.
+#cmakedefine HAVE_SYSCONF 1
+
+// Define if getpwuid_r is available.
+#cmakedefine HAVE_GETPWUID_R 1
+
+// Define if getgrgid_r is available.
+#cmakedefine HAVE_GETGRGID_R 1
+
+// Define if setpriority() is available.
+#cmakedefine HAVE_SETPRIORITY 1
+
+// Define if xkbcommon is available
+#cmakedefine HAVE_XKBCOMMON 1
+
+// Define if xlocale.h header file exists.
+#cmakedefine HAVE_XLOCALE_H 1
+
+// Define if locale_t is available
+#cmakedefine HAVE_LOCALE_T 1
+
+// Define if you have inotify_xxx() functions.
+#cmakedefine wxHAS_INOTIFY 1
+
+// Define if you have kqueu_xxx() functions.
+#cmakedefine wxHAS_KQUEUE 1
+
+// ----------------------------------------------------------------------------
+// Win32 adjustments section
+// ----------------------------------------------------------------------------
+
+#ifdef __WIN32__
+
+// When using an external jpeg library and the Windows headers already define boolean, define to the
+// type used by the jpeg library for boolean.
+#cmakedefine wxHACK_BOOLEAN
+
+#endif  // __WIN32__
+
+// wxLogChain class available
+#cmakedefine wxHAS_LOG_CHAIN
+
+// define this when wxDC::Blit() respects SetDeviceOrigin() in wxGTK
+#cmakedefine wxHAS_WORKING_GTK_DC_BLIT
+
+#endif  // __WX_SETUP_H__
+
