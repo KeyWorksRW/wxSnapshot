@@ -18,6 +18,8 @@ string( REGEX MATCH "([0-9]+)"
 set( wxVERSION ${wxMAJOR_VERSION}.${wxMINOR_VERSION}.${wxRELEASE_NUMBER} )
 set( wxCOPYRIGHT "2002-2025 wxWidgets" )
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
 include( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/policies.cmake NO_POLICY_SCOPE )
 
 set( wxLANGUAGES C CXX )
